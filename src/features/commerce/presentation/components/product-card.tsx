@@ -1,21 +1,34 @@
 "use client";
+import { Plus } from "lucide-react";
 import { useState } from "react";
-import { formatMoney, type Product } from "../../domain/catalog";
+import {
+  availabilityLabel,
+  productPrice,
+  type Product,
+  type Variant,
+} from "../../domain/catalog";
 import { ProductVisual, productImageCount } from "./product-visual";
 export function ProductCard({
   product,
+  visibleVariants = product.variants,
+  selectedSize,
   onOpen,
 }: {
   product: Product;
+  visibleVariants?: Variant[];
+  selectedSize?: string;
   onOpen: () => void;
 }) {
+  const availability = availabilityLabel(visibleVariants);
   const [imageIndex, setImageIndex] = useState(0);
   const [hovered, setHovered] = useState(false);
   const imageCount = productImageCount(product);
   const shownImage =
     hovered && imageCount > 1 ? (imageIndex === 0 ? 1 : 0) : imageIndex;
   return (
-    <article className="product">
+    <article
+      className={`product${availability === "Agotado" ? " product--sold-out" : ""}`}
+    >
       <button
         className="product-image"
         onClick={onOpen}
@@ -26,7 +39,17 @@ export function ProductCard({
         aria-label={`Ver ${product.name}`}
       >
         <ProductVisual product={product} imageIndex={shownImage} />
-        <span className="product-plus">+</span>
+        {availability !== "Disponible" && (
+          <span className="stock-badge">
+            {availability}
+            {selectedSize && availability === "Agotado"
+              ? ` · ${selectedSize}`
+              : ""}
+          </span>
+        )}
+        <span className="product-plus">
+          <Plus size={19} strokeWidth={1.5} aria-hidden="true" />
+        </span>
       </button>
       {imageCount > 1 && (
         <div className="view-switch" aria-label={`Vista de ${product.name}`}>
@@ -51,19 +74,18 @@ export function ProductCard({
         <h3>
           <button onClick={onOpen}>{product.name}</button>
         </h3>
-        <span>
-          {product.variants[0]
-            ? formatMoney(
-                product.variants[0].price,
-                product.variants[0].currency,
-              )
-            : "Próximamente"}
-        </span>
+        <span>{productPrice(visibleVariants)}</span>
       </div>
-      <div className="swatches" aria-label="Color de la prenda">
-        {product.colors.map((color) => (
-          <span key={color} style={{ background: color }} />
-        ))}
+      <div className="product-meta">
+        <span>
+          {product.categories?.map((category) => category.name).join(" / ") ||
+            product.category}
+        </span>
+        <div className="swatches" aria-label="Color de la prenda">
+          {product.colors.map((color) => (
+            <span key={color} style={{ background: color }} />
+          ))}
+        </div>
       </div>
     </article>
   );

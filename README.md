@@ -35,6 +35,8 @@ Variables en [.env.example](.env.example). Para trabajar sin API, usa `COMMERCE_
 ## 📸 Catálogo e imágenes
 
 - Productos, precios COP y disponibilidad vienen de Medusa. **Recarga la tienda** para ver cambios del panel. Si la API falla, se muestra el error.
+- Los agotados siguen visibles con etiqueta y tallas deshabilitadas. «Solo disponibles» permite ocultarlos.
+- Colecciones, tallas, categorías y colores se leen de Medusa; [administración y filtros](docs/catalogo.md).
 - El seed comienza sin fotos y con stock cero. Sube las fotos y registra las existencias reales desde el panel.
 - Miniatura = frente; segunda foto = espalda; siguientes = detalles. El catálogo alterna las dos primeras y el detalle muestra todas con flechas y miniaturas.
 - Las fotos llenan un marco **3:4** con `cover`: sin deformación, con recorte centrado del sobrante. Sin fotos aparece «Imagen pendiente».

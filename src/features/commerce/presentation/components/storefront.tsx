@@ -2,12 +2,21 @@
 import { useState } from "react";
 import Link from "next/link";
 import { Hero } from "./hero";
-import { BrandWordmark } from "./brand-wordmark";
+import { CatalogControls } from "./catalog-controls";
+import {
+  activeFilterCount,
+  catalogFacets,
+  emptyFilters,
+  filterCatalog,
+  matchingVariants,
+} from "../../domain/catalog-filters";
+import { ArrowRight, ArrowUpRight, ShoppingBag } from "lucide-react";
+import { BrandSymbol, BrandWordmark } from "./brand-wordmark";
 import { ProductCard } from "./product-card";
 import { ProductGallery } from "./product-gallery";
 import { ProductVisual } from "./product-visual";
 import type { CartLine, Product } from "../../domain/catalog";
-import { formatMoney } from "../../domain/catalog";
+import { availabilityLabel, formatMoney } from "../../domain/catalog";
 import { Modal } from "@/shared/ui/modal";
 export function Storefront({
   products,
@@ -18,7 +27,7 @@ export function Storefront({
   checkout: (lines: CartLine[]) => Promise<string>;
   checkoutEnabled: boolean;
 }) {
-  const [category, setCategory] = useState("Todo");
+  const [filters, setFilters] = useState(emptyFilters);
   const [selected, setSelected] = useState<Product | null>(null);
   const [variantId, setVariantId] = useState("");
   const [cart, setCart] = useState<CartLine[]>([]);
@@ -27,7 +36,15 @@ export function Storefront({
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
-  const categories = ["Todo", ...new Set(products.map((p) => p.category))];
+  const facets = catalogFacets(products);
+  const collection = facets.collections.find(
+    (item) => item.id === filters.collectionId,
+  );
+  const collectionTitle =
+    collection?.title ||
+    (facets.collections.length === 1
+      ? facets.collections[0].title
+      : "Las piezas");
   const items = cart.flatMap((line) => {
     const product = products.find((p) =>
       p.variants.some((v) => v.id === line.variantId),
@@ -40,9 +57,23 @@ export function Storefront({
     0,
   );
   const currencies = new Set(items.map((line) => line.variant.currency));
+  const filteredProducts = filterCatalog(products, filters);
+  const selectedVariant =
+    selected?.variants.find((variant) => variant.id === variantId) ||
+    selected?.variants[0];
   function openProduct(product: Product) {
     setSelected(product);
-    setVariantId(product.variants.find((v) => v.available)?.id || "");
+    const matches = matchingVariants(product, {
+      ...filters,
+      availableOnly: false,
+    });
+    setVariantId(
+      (
+        matches.find((variant) => variant.available) ||
+        matches[0] ||
+        product.variants[0]
+      )?.id || "",
+    );
     setNotice("");
   }
   function add() {
@@ -80,125 +111,135 @@ export function Storefront({
         Ir a la colección
       </a>
       <header className="header">
+        <nav aria-label="Principal">
+          <a href="#coleccion" onClick={() => setFilters(emptyFilters)}>
+            Colecciones
+          </a>
+          <a href="#universo">Universo</a>
+        </nav>
         <Link className="wordmark" href="/" aria-label="Vantelier, inicio">
           <BrandWordmark />
         </Link>
-        <nav aria-label="Principal">
-          <a className="active" href="#coleccion">
-            Shop
-          </a>
-          <a href="#coleccion" onClick={() => setCategory("Todo")}>
-            Colecciones
-          </a>
-          <button onClick={() => setAbout(true)}>Nosotros</button>
-        </nav>
         <button
           className="bag-button"
           onClick={() => {
             setCartOpen(true);
             setError("");
           }}
-          aria-label={`Abrir bolsa, ${cart.reduce((s, l) => s + l.quantity, 0)} artículos`}
+          aria-label={`Abrir bolsa, ${cart.reduce((sum, line) => sum + line.quantity, 0)} artículos`}
         >
-          <svg
-            width="21"
-            height="23"
-            viewBox="0 0 24 26"
-            fill="none"
-            aria-hidden="true"
-          >
-            <path d="M5 8h14l2 16H3L5 8Z" stroke="currentColor" />
-            <path d="M8 9V6a4 4 0 0 1 8 0v3" stroke="currentColor" />
-          </svg>
-          <span>{cart.reduce((s, l) => s + l.quantity, 0)}</span>
+          <span className="bag-label">Bolsa</span>
+          <ShoppingBag size={19} strokeWidth={1.5} aria-hidden="true" />
+          <span className="bag-count">
+            ({cart.reduce((sum, line) => sum + line.quantity, 0)})
+          </span>
         </button>
       </header>
       <main>
-        <Hero />
+        <Hero
+          onDiscover={() =>
+            setFilters({
+              ...emptyFilters,
+              collectionId:
+                facets.collections.find(
+                  (item) => item.handle.toLowerCase() === "relicario",
+                )?.id || "",
+            })
+          }
+        />
         <section id="coleccion" className="collection">
           <div className="section-heading">
-            <h2>RELICARIO — DROP 001</h2>
-            <div className="filters" aria-label="Filtrar colección">
-              {categories.map((c) => (
-                <button
-                  key={c}
-                  aria-pressed={category === c}
-                  onClick={() => setCategory(c)}
-                >
-                  {c}
-                </button>
+            <div>
+              <h2>{collectionTitle}</h2>
+              <p>El pasado deja huella. Tú le das otra forma.</p>
+            </div>
+            <span className="collection-edition">
+              Vantelier · Oversized fit
+            </span>
+          </div>
+          <CatalogControls
+            facets={facets}
+            filters={filters}
+            count={filteredProducts.length}
+            onChange={setFilters}
+          />
+          <div className="collection-layout">
+            <div className="product-grid">
+              {filteredProducts.length === 0 && (
+                <div className="catalog-empty">
+                  <h3>
+                    {products.length === 0
+                      ? "Las próximas piezas están en camino."
+                      : "No encontramos prendas con estos filtros."}
+                  </h3>
+                  <p>
+                    {filters.availableOnly
+                      ? "Prueba otra talla o explora también los diseños agotados."
+                      : "Puedes probar otra búsqueda o volver al catálogo completo."}
+                  </p>
+                  {activeFilterCount(filters) > 0 && (
+                    <button
+                      className="text-link"
+                      onClick={() => setFilters(emptyFilters)}
+                    >
+                      Ver todas las piezas{" "}
+                      <ArrowRight size={18} aria-hidden="true" />
+                    </button>
+                  )}
+                </div>
+              )}
+              {filteredProducts.map((product) => (
+                <ProductCard
+                  key={product.id}
+                  product={product}
+                  visibleVariants={matchingVariants(product, filters)}
+                  selectedSize={filters.size}
+                  onOpen={() => openProduct(product)}
+                />
               ))}
             </div>
           </div>
-          <div className="collection-layout">
-            <div className="product-grid">
-              {products.length === 0 && (
-                <p>La colección estará disponible próximamente.</p>
-              )}
-              {products
-                .filter((p) => category === "Todo" || p.category === category)
-                .map((product) => (
-                  <ProductCard
-                    key={product.id}
-                    product={product}
-                    onOpen={() => openProduct(product)}
-                  />
-                ))}
-            </div>
-            <aside className="editorials">
-              <button className="editorial" onClick={() => setAbout(true)}>
-                <div className="texture texture-dark" />
-                <span>
-                  <strong>
-                    THE
-                    <br />
-                    FEELING
-                  </strong>
-                  <small>
-                    Texturas que hablan.
-                    <br />
-                    Detalles que importan.
-                  </small>
-                  <b>⟶</b>
-                </span>
-              </button>
-              <button className="editorial" onClick={() => setAbout(true)}>
-                <div className="label-photo">
-                  <span>
-                    <BrandWordmark registered={false} />
-                    <small>WEAR YOUR OWN WAY</small>
-                  </span>
-                </div>
-                <span>
-                  <strong>
-                    IN THE
-                    <br />
-                    DETAILS
-                  </strong>
-                  <small>
-                    Menos ruido.
-                    <br />
-                    Más identidad.
-                  </small>
-                  <b>⟶</b>
-                </span>
-              </button>
-            </aside>
-          </div>
-          {!products.length && <p>Estamos preparando la próxima colección.</p>}
         </section>
-        <section className="manifesto">
-          <p>No se trata de encajar.</p>
-          <h2>SE TRATA DE SER.</h2>
-          <button onClick={() => setAbout(true)}>Conoce Vantelier ⟶</button>
+        <section
+          id="universo"
+          className="manifesto"
+          aria-labelledby="manifesto-title"
+        >
+          <div className="manifesto-seal" aria-hidden="true">
+            <BrandSymbol />
+            <span>Vantelier · Relicario</span>
+          </div>
+          <div className="manifesto-copy">
+            <h2 id="manifesto-title">
+              SE TRATA
+              <br />
+              DE SER.
+            </h2>
+            <p>
+              Siluetas amplias, una mirada urbana y atención a los detalles. Esa
+              es nuestra forma de hacer streetwear.
+            </p>
+            <button className="text-link" onClick={() => setAbout(true)}>
+              Conoce Vantelier <ArrowUpRight size={18} aria-hidden="true" />
+            </button>
+          </div>
         </section>
       </main>
-      <footer>
-        <Link className="footer-logo" href="/">
+      <footer className="footer">
+        <div className="footer-top">
+          <p>Wear your own way.</p>
+          <a href="#coleccion" className="text-link">
+            Explorar colección <ArrowUpRight size={18} aria-hidden="true" />
+          </a>
+        </div>
+        <Link className="footer-logo" href="/" aria-label="Vantelier, inicio">
           <BrandWordmark />
         </Link>
-        <span>Streetwear for a wider tomorrow.</span>
-        <span>Colombia · COP</span>
+        <div className="footer-bottom">
+          <span>Colombia · COP</span>
+          <span>Streetwear for a wider tomorrow.</span>
+          <span>Relicario / 001</span>
+        </div>
       </footer>
       <p className="sr-only" aria-live="polite">
         {notice}
@@ -207,17 +248,21 @@ export function Storefront({
         <Modal title={selected.name} onClose={() => setSelected(null)}>
           <div className="product-detail">
             <ProductGallery key={selected.id} product={selected} />
-            <div>
+            <div className="product-detail-copy">
               <p>{selected.description}</p>
               <p className="detail-price">
-                {selected.variants.find((v) => v.id === variantId)
-                  ? formatMoney(
-                      selected.variants.find((v) => v.id === variantId)!.price,
-                      selected.variants.find((v) => v.id === variantId)!
-                        .currency,
-                    )
-                  : "Sin disponibilidad"}
+                {selectedVariant
+                  ? formatMoney(selectedVariant.price, selectedVariant.currency)
+                  : "Próximamente"}
               </p>
+              <p className="detail-availability">
+                {availabilityLabel(selectedVariant ? [selectedVariant] : [])}
+              </p>
+              {selected.collection && (
+                <p className="detail-collection">
+                  Colección {selected.collection.title}
+                </p>
+              )}
               <fieldset>
                 <legend>Selecciona tu talla / variante</legend>
                 <div className="sizes">
@@ -226,6 +271,7 @@ export function Storefront({
                       key={v.id}
                       disabled={!v.available}
                       aria-pressed={v.id === variantId}
+                      aria-label={`${v.title}${!v.available ? ", agotada" : v.backorder ? ", bajo pedido" : ""}`}
                       onClick={() => setVariantId(v.id)}
                     >
                       {v.title}
@@ -234,14 +280,26 @@ export function Storefront({
                 </div>
               </fieldset>
               <p className="detail-note">
+                Las tallas tachadas están agotadas.
+                {selectedVariant?.backorder
+                  ? " Esta variante está disponible bajo pedido."
+                  : ""}
+              </p>
+              <p className="detail-note">
                 Fit oversize. Revisa las medidas de la prenda antes de comprar.
               </p>
               <button
                 className="button full"
-                disabled={!variantId}
+                disabled={!selectedVariant?.available}
                 onClick={add}
               >
-                Agregar a la bolsa +
+                {availabilityLabel(selectedVariant ? [selectedVariant] : []) ===
+                "Agotado"
+                  ? "Agotado"
+                  : selected.variants.length
+                    ? "Agregar a la bolsa"
+                    : "Próximamente"}{" "}
+                <ArrowRight size={18} aria-hidden="true" />
               </button>
             </div>
           </div>
@@ -320,7 +378,8 @@ export function Storefront({
                 disabled={busy || !checkoutEnabled}
                 onClick={pay}
               >
-                {busy ? "Abriendo checkout…" : "Continuar al pago ⟶"}
+                {busy ? "Abriendo checkout…" : "Continuar al pago"}
+                <ArrowRight size={18} aria-hidden="true" />
               </button>
               {error && (
                 <p role="alert" className="error">
@@ -332,7 +391,7 @@ export function Storefront({
             <div className="empty">
               <p>Tu próxima prenda favorita te espera.</p>
               <button className="button" onClick={() => setCartOpen(false)}>
-                Explorar colección ⟶
+                Explorar colección <ArrowRight size={18} aria-hidden="true" />
               </button>
             </div>
           )}
@@ -353,8 +412,8 @@ export function Storefront({
               es nuestra forma de hacer streetwear.
             </p>
             <p className="detail-note">
-              Primera colección en preparación. Las imágenes y los precios de
-              esta muestra son ilustrativos.
+              Primera colección en preparación. Las compras estarán disponibles
+              cuando terminemos de preparar la tienda.
             </p>
             <button
               className="button"
@@ -363,7 +422,7 @@ export function Storefront({
                 document.getElementById("coleccion")?.scrollIntoView();
               }}
             >
-              Ver colección ⟶
+              Ver colección <ArrowRight size={18} aria-hidden="true" />
             </button>
           </div>
         </Modal>

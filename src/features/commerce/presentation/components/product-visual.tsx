@@ -1,4 +1,5 @@
 /* eslint-disable @next/next/no-img-element */
+import { BrandSymbol } from "./brand-wordmark";
 import type { Product } from "../../domain/catalog";
 import type { CSSProperties } from "react";
 import { publicPath } from "@/shared/config/public-path";
@@ -28,7 +29,8 @@ export function ProductVisual({
         role="img"
         aria-label={`${product.name}, imagen pendiente`}
       >
-        Imagen pendiente
+        <BrandSymbol className="product-placeholder-mark" />
+        <span>Imagen pendiente</span>
       </span>
     );
   const style = atlas

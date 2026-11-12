@@ -22,7 +22,7 @@ Las cuatro láminas locales contienen cuatro columnas y dos filas: frentes arrib
 
 Los archivos activos son `01-04-signature.png`, `05-08-signature.png`, `09-12-signature.png` y `13-16-signature.png`. Los nombres de revisión evitan reutilizar las imágenes anteriores almacenadas en caché.
 
-El hero usa `hero-signature.png`: un modelo de frente, con gafas negras envolventes inspiradas en Prada PR D10S, camiseta blanca mate y logo Vantelier grueso en el pecho. La imagen PNG tiene transparencia real. El titular permanece como texto HTML accesible detrás de la silueta; el botón y el texto auxiliar están en una capa superior. El efecto no depende de texto incrustado en la imagen.
+El hero usa `hero-signature.png`: un modelo de frente, con gafas negras envolventes inspiradas en Prada PR D10S, camiseta blanca mate y logo Vantelier grueso en el pecho. La imagen PNG tiene transparencia real. El titular es texto HTML accesible en un bloque lateral; el modelo ocupa un panel fotográfico independiente. En móvil ambos bloques se apilan. La campaña sigue siendo contenido editorial del frontend, independiente del catálogo administrado en Medusa.
 
 ## Firma tipográfica
 
@@ -33,3 +33,11 @@ Los 16 diseños comparten una firma de letras mayúsculas sans serif de peso alt
 La imagen original y las revisiones se conservan en `generated_images`. Las copias utilizadas por la aplicación están en `public/images/vantelier` y se incluyen cuando se prepara el repositorio del frontend.
 
 Los precios y las existencias son demostrativos. Los mockups requieren validación con las prendas físicas antes de presentarse como fotografías de producto final.
+
+## Interfaz
+
+Paleta de papel cálido, tinta y oro mate. Antonio para titulares, Archivo Black para la firma y Manrope para lectura, todas autoalojadas con sus licencias OFL. El catálogo mantiene marcos 3:4, información discreta, estados de stock explícitos y controles con foco visible. Se respeta la preferencia de movimiento reducido.
+
+Referencias de composición: [Cole Buxton](https://www.colebuxton.com/collections/t-shirts) por la fotografía y la jerarquía del catálogo, [Undergold](https://undergoldapparel.com/) por la presencia de campaña y [Entire Studios](https://www.entirestudios.com/) por la navegación contenida. Se utilizan exclusivamente los recursos de Vantelier.
+
+Impeccable 4.8.2 está instalado para este proyecto en `.agents/skills/impeccable/`, sin hooks automáticos ni dependencias del sitio. Sus instrucciones y licencia se versionan; el ejecutable local descargable se excluye de Git.

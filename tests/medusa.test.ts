@@ -37,6 +37,59 @@ afterEach(() => {
 });
 
 describe("catálogo Medusa", () => {
+  it("lee colecciones, categorías públicas y opciones nativas sin deducir la talla del título", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue(
+        respond([
+          {
+            ...product,
+            collection: {
+              id: "pcol_live",
+              title: "Nueva entrega",
+              handle: "nueva-entrega",
+            },
+            categories: [
+              {
+                id: "cat_tee",
+                name: "Camisetas",
+                is_active: true,
+                is_internal: false,
+              },
+              { id: "cat_private", name: "Interna", is_internal: true },
+            ],
+            options: [
+              { id: "opt_size", title: "Talla" },
+              { id: "opt_color", title: "Color" },
+            ],
+            variants: [
+              {
+                ...variant,
+                title: "Una variante",
+                options: [
+                  { option_id: "opt_size", value: "XL" },
+                  { option_id: "opt_color", value: "Negro" },
+                ],
+              },
+            ],
+          },
+        ]),
+      ),
+    );
+    const [mapped] = await createMedusaProvider(config).getProducts();
+    expect(mapped.collection).toEqual({
+      id: "pcol_live",
+      title: "Nueva entrega",
+      handle: "nueva-entrega",
+    });
+    expect(mapped.categories).toEqual([{ id: "cat_tee", name: "Camisetas" }]);
+    expect(mapped.variants[0]).toMatchObject({
+      title: "Una variante",
+      size: "XL",
+      color: "Negro",
+      available: false,
+    });
+  });
   it("consulta región, precios e inventario reales sin caché ni conversión de centavos", async () => {
     const fetchMock = vi.fn().mockResolvedValue(respond([product]));
     vi.stubGlobal("fetch", fetchMock);
@@ -57,7 +110,7 @@ describe("catálogo Medusa", () => {
     const [url, options] = fetchMock.mock.calls[0];
     expect(new URL(url).searchParams.get("region_id")).toBe("reg_colombia");
     expect(new URL(url).searchParams.get("fields")).toBe(
-      "*variants.calculated_price,+variants.inventory_quantity,+metadata",
+      "*variants.calculated_price,+variants.inventory_quantity,+metadata,*collection,*categories,*options,*variants.options",
     );
     expect(options.headers).toEqual({ "x-publishable-api-key": "pk_test" });
     expect(options.cache).toBe("no-store");

@@ -1,4 +1,5 @@
 "use client";
+import { X } from "lucide-react";
 import { useEffect, useRef, type ReactNode } from "react";
 export function Modal({
   title,
@@ -33,7 +34,7 @@ export function Modal({
         <div className="dialog-header">
           <h2 id="dialog-title">{title}</h2>
           <button className="icon-button" onClick={onClose} aria-label="Cerrar">
-            ×
+            <X size={22} strokeWidth={1.5} aria-hidden="true" />
           </button>
         </div>
         {children}

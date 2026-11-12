@@ -7,6 +7,7 @@ type MedusaVariant = {
   manage_inventory?: boolean;
   allow_backorder?: boolean;
   inventory_quantity?: number;
+  options?: { value: string; option_id?: string; option?: { title: string } }[];
   calculated_price?: {
     calculated_amount?: number | null;
     currency_code?: string;
@@ -20,6 +21,14 @@ type MedusaProduct = {
   images?: { url: string }[];
   metadata?: Record<string, unknown> | null;
   variants?: MedusaVariant[];
+  collection?: { id: string; title: string; handle: string } | null;
+  categories?: {
+    id: string;
+    name: string;
+    is_active?: boolean;
+    is_internal?: boolean;
+  }[];
+  options?: { id: string; title: string }[];
 };
 type Config = { backendUrl: string; publishableKey: string; regionId: string };
 
@@ -56,7 +65,7 @@ export function createMedusaProvider(config: Config): CommerceProvider {
         const params = new URLSearchParams({
           region_id: config.regionId,
           fields:
-            "*variants.calculated_price,+variants.inventory_quantity,+metadata",
+            "*variants.calculated_price,+variants.inventory_quantity,+metadata,*collection,*categories,*options,*variants.options",
           limit: "100",
           offset: String(offset),
           order: "id",
@@ -129,6 +138,19 @@ function mapProduct(product: MedusaProduct): Product {
     description: product.description || "",
     image: images[0] || "",
     images,
+    collection: product.collection
+      ? {
+          id: product.collection.id,
+          title: product.collection.title,
+          handle: product.collection.handle,
+        }
+      : undefined,
+    categories: (product.categories || [])
+      .filter(
+        (category) =>
+          category.is_active !== false && category.is_internal !== true,
+      )
+      .map(({ id, name }) => ({ id, name })),
     category:
       typeof metadata.category === "string" ? metadata.category : "Colección",
     colors: Array.isArray(metadata.colors)
@@ -154,6 +176,12 @@ function mapProduct(product: MedusaProduct): Product {
           title: variant.title || "Única",
           price: price.calculated_amount,
           currency: "COP",
+          ...variantOptions(variant, product),
+          ...(variant.allow_backorder &&
+          variant.manage_inventory !== false &&
+          !(variant.inventory_quantity && variant.inventory_quantity > 0)
+            ? { backorder: true }
+            : {}),
           available:
             variant.manage_inventory === false ||
             variant.allow_backorder === true ||
@@ -163,6 +191,22 @@ function mapProduct(product: MedusaProduct): Product {
       ];
     }),
   };
+}
+
+function variantOptions(variant: MedusaVariant, product: MedusaProduct) {
+  const result: { size?: string; color?: string } = {};
+  for (const option of variant.options || []) {
+    const title = (
+      option.option?.title ||
+      product.options?.find((item) => item.id === option.option_id)?.title ||
+      ""
+    )
+      .trim()
+      .toLowerCase();
+    if (["talla", "size", "tamaño"].includes(title)) result.size = option.value;
+    if (["color", "colour"].includes(title)) result.color = option.value;
+  }
+  return result;
 }
 
 function imageUrl(value: unknown): string {

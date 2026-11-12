@@ -1,10 +1,11 @@
 :root {
-  --paper: #f5f4ef;
-  --canvas: #eae9e3;
-  --ink: #10100f;
-  --muted: #61615b;
-  --line: #dcdcd4;
-  --accent: #be2824;
-  --blue: #252e99;
-  --gutter: clamp(20px, 4vw, 72px);
+  --paper: #f8f7f4;
+  --canvas: #eeece7;
+  --ink: #20211f;
+  --muted: #65655e;
+  --line: #d6d5ce;
+  --accent: #876b3c;
+  --inverse: #f8f7f4;
+  --gutter: clamp(20px, 4.4vw, 88px);
+  --ease: cubic-bezier(0.16, 1, 0.3, 1);
 }

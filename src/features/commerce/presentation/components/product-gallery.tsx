@@ -1,4 +1,5 @@
 "use client";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 import { useState } from "react";
 import type { Product } from "../../domain/catalog";
 import {
@@ -23,7 +24,7 @@ export function ProductGallery({ product }: { product: Product }) {
                 setImageIndex((current + imageCount - 1) % imageCount)
               }
             >
-              ←
+              <ChevronLeft size={18} aria-hidden="true" />
             </button>
             <span aria-live="polite">
               {productImageLabel(current)} · {current + 1} / {imageCount}
@@ -33,7 +34,7 @@ export function ProductGallery({ product }: { product: Product }) {
               aria-label="Foto siguiente"
               onClick={() => setImageIndex((current + 1) % imageCount)}
             >
-              →
+              <ChevronRight size={18} aria-hidden="true" />
             </button>
           </div>
           <div

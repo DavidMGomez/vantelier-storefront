@@ -147,10 +147,12 @@ export const demoProducts: Product[] = designs.map((design, i) => ({
     column: i % 4,
   },
   category: design.category,
+  collection: { id: "demo_relicario", title: "Relicario", handle: "relicario" },
   colors: [design.color],
   variants: ["S", "M", "L", "XL"].map((size) => ({
     id: `${design.id}-${size}`,
     title: size,
+    size,
     available: true,
     price: 149000,
     currency: "COP",

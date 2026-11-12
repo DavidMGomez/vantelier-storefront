@@ -10,6 +10,18 @@ const manrope = localFont({
   variable: "--font-body",
   display: "swap",
 });
+const display = localFont({
+  src: "../../public/fonts/antonio-variable.ttf",
+  variable: "--font-display",
+  weight: "100 700",
+  display: "swap",
+});
+const brand = localFont({
+  src: "../../public/fonts/archivo-black.ttf",
+  variable: "--font-brand",
+  weight: "400",
+  display: "swap",
+});
 export const metadata: Metadata = {
   title: "VANTELIER — Wear your own way",
   description:
@@ -20,7 +32,10 @@ export default function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="es" className={manrope.variable}>
+    <html
+      lang="es"
+      className={`${manrope.variable} ${display.variable} ${brand.variable}`}
+    >
       <body>{children}</body>
     </html>
   );
