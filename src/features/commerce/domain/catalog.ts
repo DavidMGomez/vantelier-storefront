@@ -10,6 +10,7 @@ export type Product = {
   name: string;
   description: string;
   image: string;
+  images?: string[];
   lookbook?: { src: string; column: number };
   category: string;
   colors: string[];

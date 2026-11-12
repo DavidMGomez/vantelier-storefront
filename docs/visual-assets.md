@@ -1,5 +1,13 @@
 # Colección Relicario
 
+Esta guía describe los recursos del modo demo y la identidad visual. El catálogo conectado a Medusa utiliza fotografías individuales subidas desde el panel; el seed no incluye estas láminas ni sus instrucciones de recorte. El hero sigue siendo un recurso del frontend.
+
+## Fotografías del catálogo Medusa
+
+Selecciona el frente como miniatura en Medusa y coloca la espalda a continuación en la galería. Las fotos restantes muestran detalles o ángulos adicionales. El frontend coloca la miniatura primero, conserva el orden de las demás URLs y elimina duplicados; no interpreta los nombres de archivo. La tarjeta permite alternar las dos primeras fotos; el detalle muestra todas mediante miniaturas y flechas, también en móvil.
+
+Las fotografías llenan un rectángulo 3:4 con `object-fit: cover` y posición central. Se mantiene la proporción original y se recorta el sobrante, sin deformar la prenda ni modificar el archivo almacenado. Para controlar el encuadre, prepara fotos 3:4 con margen alrededor del producto. Con una sola foto no se ofrece una espalda ficticia; sin fotos aparece «Imagen pendiente».
+
 El catálogo contiene los 16 diseños de la lámina de referencia: Vestigio, Ofrenda, Fisura, Umbra, Herencia, Fragmento, Tumbaga, Memoria, Umbral, Origen, Custodia, Estrato, Reliquia, Latencia, Áureo y Legado.
 
 Los estampados grandes se interpretan como espaldas. Los frentes son propuestas complementarias con la firma de marca y un motivo pequeño. Cada diseño tiene vistas de frente y espalda en modelos; los botones permiten seleccionarlas en escritorio y móvil. En dispositivos con ratón, pasar sobre la fotografía muestra la vista opuesta.

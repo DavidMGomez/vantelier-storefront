@@ -8,8 +8,7 @@ const config = {
   publishableKey: "pk_test",
   regionId: "reg_colombia",
 };
-const originalImage =
-  "https://davidmgomez.github.io/vantelier-storefront/images/vantelier/01-04-signature.png";
+const uploadedImage = "http://localhost:9000/static/foto.png";
 const variant = {
   id: "variant_real_s",
   title: "S",
@@ -21,11 +20,11 @@ const variant = {
 const product = {
   id: "prod_real",
   title: "Vestigio",
-  thumbnail: originalImage,
+  thumbnail: null,
+  images: [],
   metadata: {
     category: "Mármol",
     colors: ["#161616"],
-    lookbook: { src: originalImage, column: 0 },
   },
   variants: [variant],
 };
@@ -52,10 +51,9 @@ describe("catálogo Medusa", () => {
         available: false,
       },
     ]);
-    expect(mapped.lookbook).toEqual({
-      src: "/images/vantelier/01-04-signature.png",
-      column: 0,
-    });
+    expect(mapped.image).toBe("");
+    expect(mapped.images).toEqual([]);
+    expect(mapped.lookbook).toBeUndefined();
     const [url, options] = fetchMock.mock.calls[0];
     expect(new URL(url).searchParams.get("region_id")).toBe("reg_colombia");
     expect(new URL(url).searchParams.get("fields")).toBe(
@@ -100,6 +98,67 @@ describe("catálogo Medusa", () => {
     });
     expect(updated.image).toBe("http://localhost:9000/static/foto.png");
     expect(updated.lookbook).toBeUndefined();
+  });
+  it("usa la foto subida sin interpretar instrucciones antiguas de recorte", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue(
+        respond([
+          {
+            ...product,
+            thumbnail: uploadedImage,
+            metadata: {
+              ...product.metadata,
+              lookbook: { src: uploadedImage, column: 2 },
+            },
+          },
+        ]),
+      ),
+    );
+    const [mapped] = await createMedusaProvider(config).getProducts();
+    expect(mapped.image).toBe(uploadedImage);
+    expect(mapped.lookbook).toBeUndefined();
+  });
+  it("usa la primera foto de Medusa cuando el producto no tiene miniatura", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue(
+        respond([
+          {
+            ...product,
+            images: [{ url: uploadedImage }],
+          },
+        ]),
+      ),
+    );
+    const [mapped] = await createMedusaProvider(config).getProducts();
+    expect(mapped.image).toBe(uploadedImage);
+  });
+  it("ordena todas las fotos con la miniatura primero, conserva detalles y elimina duplicados", async () => {
+    const back = "http://localhost:9000/static/espalda.png";
+    const detail = "http://localhost:9000/static/detalle.png";
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue(
+        respond([
+          {
+            ...product,
+            thumbnail: uploadedImage,
+            images: [
+              { url: back },
+              { url: uploadedImage },
+              { url: detail },
+              { url: back },
+              { url: "javascript:invalid" },
+            ],
+          },
+        ]),
+      ),
+    );
+    const [mapped] = await createMedusaProvider(config).getProducts();
+    expect(mapped.image).toBe(uploadedImage);
+    expect(mapped.images).toEqual([uploadedImage, back, detail]);
+    expect(mapped.lookbook).toBeUndefined();
   });
   it("no inventa precios o stock cuando faltan datos y respeta las políticas de inventario", async () => {
     vi.stubGlobal(

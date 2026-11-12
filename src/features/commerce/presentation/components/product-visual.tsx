@@ -2,29 +2,39 @@
 import type { Product } from "../../domain/catalog";
 import type { CSSProperties } from "react";
 import { publicPath } from "@/shared/config/public-path";
-export type ProductView = "front" | "back";
+export function productImageCount(product: Product) {
+  if (product.lookbook) return 2;
+  return product.images?.length || (product.image ? 1 : 0);
+}
+export function productImageLabel(index: number) {
+  return index === 0 ? "Frente" : index === 1 ? "Espalda" : `Foto ${index + 1}`;
+}
 export function ProductVisual({
   product,
-  view = "front",
+  imageIndex = 0,
   eager = false,
 }: {
   product: Product;
-  view?: ProductView;
+  imageIndex?: number;
   eager?: boolean;
 }) {
   const atlas = product.lookbook;
-  if (!product.image)
+  const photos = product.images?.length ? product.images : [product.image];
+  const src = atlas?.src || photos[imageIndex] || photos[0];
+  if (!src)
     return (
       <span
-        className="product-visual"
+        className="product-visual product-visual--empty"
         role="img"
         aria-label={`${product.name}, imagen pendiente`}
-      />
+      >
+        Imagen pendiente
+      </span>
     );
   const style = atlas
     ? ({
         "--lookbook-column": atlas.column,
-        "--lookbook-row": view === "front" ? 0 : 1,
+        "--lookbook-row": imageIndex === 1 ? 1 : 0,
       } as CSSProperties)
     : undefined;
   return (
@@ -35,8 +45,12 @@ export function ProductVisual({
       style={style}
     >
       <img
-        src={publicPath(atlas?.src || product.image)}
-        alt={`${product.name}, vista ${view === "front" ? "de frente" : "de espalda"}`}
+        src={publicPath(src)}
+        alt={
+          productImageCount(product) > 1
+            ? `${product.name}, ${productImageLabel(imageIndex).toLowerCase()}`
+            : product.name
+        }
         loading={eager ? "eager" : "lazy"}
         decoding="async"
         width={atlas ? 1536 : 600}

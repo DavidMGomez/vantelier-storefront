@@ -115,28 +115,20 @@ export function createMedusaProvider(config: Config): CommerceProvider {
 
 function mapProduct(product: MedusaProduct): Product {
   const metadata = product.metadata || {};
-  const image = imageUrl(product.thumbnail || product.images?.[0]?.url);
-  const atlas = metadata.lookbook;
-  const lookbook =
-    atlas &&
-    typeof atlas === "object" &&
-    "src" in atlas &&
-    "column" in atlas &&
-    typeof atlas.column === "number" &&
-    Number.isInteger(atlas.column) &&
-    atlas.column >= 0 &&
-    atlas.column < 4 &&
-    image &&
-    imageUrl(atlas.src) === image
-      ? { src: image, column: atlas.column }
-      : undefined;
+  const images = [
+    ...new Set(
+      [
+        imageUrl(product.thumbnail),
+        ...(product.images || []).map((image) => imageUrl(image.url)),
+      ].filter(Boolean),
+    ),
+  ];
   return {
     id: product.id,
     name: product.title,
     description: product.description || "",
-    image,
-    // Una foto nueva del panel tiene prioridad sobre el mockup inicial.
-    ...(lookbook ? { lookbook } : {}),
+    image: images[0] || "",
+    images,
     category:
       typeof metadata.category === "string" ? metadata.category : "Colección",
     colors: Array.isArray(metadata.colors)
@@ -175,12 +167,6 @@ function mapProduct(product: MedusaProduct): Product {
 
 function imageUrl(value: unknown): string {
   if (typeof value !== "string") return "";
-  // Los cuatro mockups originales ya existen en public: desarrollo sin depender del sitio publicado.
-  const original =
-    /^https:\/\/davidmgomez\.github\.io\/vantelier-storefront\/images\/vantelier\/((?:01-04|05-08|09-12|13-16)-signature\.png)$/.exec(
-      value,
-    );
-  if (original) return `/images/vantelier/${original[1]}`;
   if (value.startsWith("/") && !value.startsWith("//")) return value;
   try {
     const url = new URL(value);
