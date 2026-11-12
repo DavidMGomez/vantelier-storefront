@@ -1,111 +1,101 @@
-# Vantelier
+# Vantelier · Storefront
 
-Tienda de streetwear oversize con una experiencia editorial y un backend de comercio intercambiable. Construida con Next.js, React y TypeScript, organizada mediante arquitectura hexagonal ligera.
+Tienda de ropa oversize con Next.js, React y TypeScript. En desarrollo usa **Medusa local** para consultar productos, variantes, precios COP y disponibilidad. El panel administrativo pertenece al repositorio `vantelier-backend`.
 
-## Estado del proyecto
+## Arranque local
 
-Skeleton funcional: catálogo, filtros por colección, detalle de producto, selección de variantes, bolsa con cantidades y adaptador de checkout de Shopify. Arranca en modo demo sin credenciales ni cobros. La integración real requiere una tienda Shopify configurada y validación de extremo a extremo.
+Requisitos: Node 24 y npm 11. Los dos repositorios deben estar en tu carpeta `GitHub`.
 
-## Desarrollo
+**Primero, preparar el backend** desde `vantelier-backend`:
 
-Requisitos: Node.js 24 o superior y npm 11.
+```sh
+npm run setup
+```
+
+Si ya estaba preparado, basta con `npm run seed` para generar la configuración de conexión de esta versión. El seed conserva precios y existencias editados desde el panel. Genera `.local/storefront.env`, que contiene únicamente URL local, clave pública y región.
+
+**Preparar el frontend** desde `vantelier-storefront`:
 
 ```sh
 npm ci
-cp .env.example .env.local
-npm run dev
+node --input-type=module -e "import { copyFileSync, constants } from 'node:fs'; copyFileSync('../vantelier-backend/.local/storefront.env', '.env.local', constants.COPYFILE_EXCL)"
 ```
 
-Abre http://localhost:3200.
+El comando es válido en macOS, Linux y PowerShell y evita sobrescribir un `.env.local` existente. Si ya tienes ese archivo, actualiza sus cuatro variables con las del archivo generado. No copies el `.env` completo del backend.
 
-```sh
-npm run check   # Lint, tipos, pruebas y formato
-npm run build  # Compilación de producción
-npm start      # Servidor de producción
+**Uso diario, dos terminales:**
+
+| Carpeta                | Comando       | Dirección                                                        |
+| ---------------------- | ------------- | ---------------------------------------------------------------- |
+| `vantelier-backend`    | `npm run dev` | API: <http://localhost:9000>, panel: <http://localhost:9000/app> |
+| `vantelier-storefront` | `npm run dev` | Tienda: <http://localhost:3200>                                  |
+
+El backend inicia su PostgreSQL local y Medusa; el frontend inicia Next.js en el puerto 3200. No necesitas Redis. Detén cada servidor con `Ctrl+C`. Después de modificar `.env.local`, reinicia Next.js.
+
+## Qué funciona
+
+- Catálogo obtenido de la Store API de Medusa, paginado y consultado en el servidor Next en cada visita, sin caché. Recarga la tienda para ver cambios del panel.
+- Precios calculados para Colombia en COP, sin dividirlos por 100. Los $149.000 iniciales siguen pendientes de revisión comercial.
+- Disponibilidad según el inventario del canal de ventas. El seed inicia en cero: las tallas estarán agotadas hasta registrar existencias reales. Sin precio COP, una variante no se ofrece para compra.
+- Filtros, detalle, selección de variantes y bolsa en memoria. La bolsa no reserva inventario ni crea todavía un carrito Medusa.
+- Imágenes nuevas cargadas desde Medusa; los cuatro mockups originales tienen copia en `public/images/vantelier` y se muestran localmente.
+- Pagos bloqueados en la interfaz, en `/api/checkout` y en el backend Medusa.
+
+No se han conectado aún registro/login de clientes, pedidos desde la tienda, checkout, pasarela, envíos ni impuestos. Los módulos administrativos oficiales ya pertenecen al backend. Si falla la API, se muestra un error; no se reemplazan silenciosamente los datos por la demo.
+
+## Variables de entorno
+
+Guardar en `.env.local`, excluido de Git:
+
+```dotenv
+COMMERCE_PROVIDER=medusa
+MEDUSA_BACKEND_URL=http://127.0.0.1:9000
+MEDUSA_PUBLISHABLE_KEY=pk_CLAVE_PUBLICA_DEL_CANAL
+MEDUSA_REGION_ID=reg_REGION_COLOMBIA
 ```
+
+Son variables del servidor Next, sin prefijo `NEXT_PUBLIC_`. La clave publicable identifica el canal de ventas; no es la contraseña del administrador. Se obtiene también en el panel, **Settings → Publishable API Keys → Vantelier Storefront**. No colocar tokens Admin, secretos JWT o contraseñas en este frontend.
+
+Para trabajar en diseño sin API existe `COMMERCE_PROVIDER=demo`. El adaptador Shopify anterior permanece como alternativa histórica y requiere configuración explícita; el flujo actual es Medusa. Los archivos de exportación estática existentes no forman parte del desarrollo local.
+
+## Imágenes
+
+Las subidas del panel se almacenan en `vantelier-backend/static/` y se sirven por `http://localhost:9000/static/...`. PostgreSQL guarda sus referencias, no los archivos binarios. Cambiar la miniatura desde el panel reemplaza el mockup en la tienda al recargar. Las láminas iniciales conservan el recorte frente/espalda de `metadata.lookbook`; una miniatura diferente deja de usar ese recorte.
+
+Para nube, el backend admite un proveedor S3 compatible por variables de entorno. El frontend utiliza las URLs devueltas por Medusa. No necesita credenciales de storage. Consulta `vantelier-backend/docs/storage.md` para configuración y migración.
 
 ## Arquitectura
 
-| Directorio                                | Responsabilidad                                           |
-| ----------------------------------------- | --------------------------------------------------------- |
-| `src/app`                                 | Rutas, layout y frontera HTTP del checkout                |
-| `src/composition/storefront`              | Selección e inyección de adaptadores                      |
-| `src/features/commerce/domain`            | Productos, variantes y validación de líneas               |
-| `src/features/commerce/application/ports` | Contrato del proveedor de comercio                        |
-| `src/features/commerce/infrastructure`    | Catálogo demo, Shopify y cliente HTTP                     |
-| `src/features/commerce/presentation`      | Experiencia de compra y estado de interfaz                |
-| `src/shared`                              | Modal accesible y tokens visuales                         |
-| `tests`                                   | Reglas de arquitectura, validación y contrato de checkout |
+| Ruta                                                      | Responsabilidad                                                   |
+| --------------------------------------------------------- | ----------------------------------------------------------------- |
+| `src/app`                                                 | Rutas Next, renderizado por petición y frontera HTTP del checkout |
+| `src/composition/storefront`                              | Selección e inyección del proveedor                               |
+| `src/features/commerce/domain`                            | Contrato de productos, variantes y líneas de bolsa                |
+| `src/features/commerce/application/ports`                 | Interfaz `CommerceProvider`                                       |
+| `src/features/commerce/infrastructure/medusa-provider.ts` | Store API, paginación y traducción al contrato de la tienda       |
+| `src/features/commerce/presentation`                      | Interfaz y estado local de la bolsa                               |
+| `src/shared`                                              | Componentes compartidos, rutas de recursos y estilos              |
+| `tests`                                                   | Contratos, errores, precios, inventario y límites entre capas     |
 
-El dominio no depende de React, Next.js ni del proveedor. La presentación recibe datos y operaciones por inyección. Solamente composición selecciona la implementación. Una regla de ESLint heredada del patrón de Xirius protege las dependencias entre capas, incluso imports relativos y dinámicos.
+El navegador recibe el catálogo renderizado por Next; Next consulta Medusa con la clave pública. La presentación no conoce los endpoints ni las credenciales. La administración comercial se hace desde `/app` del backend, no editando el catálogo demo.
 
-## Preparar los repositorios
-
-La arquitectura elegida para la siguiente etapa es Medusa. El preparador crea dos repositorios privados: `vantelier-storefront` y `vantelier-backend`, dentro de `~/Documents/GitHub` por defecto. Requiere GitHub CLI autenticado y acceso a npm/GitHub.
+## Validación y compilación
 
 ```sh
-node scripts/setup-github.mjs --directory "$HOME/Documents/GitHub"
+npm run check
+npm run build
+npm start
 ```
 
-Consulta [la guía local](docs/local-setup.md) para requisitos, ejecución del backend y límites de esta preparación. La tienda de marca todavía usa datos demo; la conexión con Medusa y su checkout están pendientes.
+`check` ejecuta lint, tipos, pruebas y formato. `build` genera `.next-build`; no necesita una API activa porque el catálogo comercial se resuelve al visitar la página. `start` sirve ese build en el puerto 3200 y sí necesita Medusa y las variables configuradas. Para desarrollar utiliza `dev`.
 
-## Adaptador de comercio actual
+Verificados: 40 pruebas, lint, tipos, formato y build de producción de Next.js. La prueba real entre ambos servidores debe hacerse desde una terminal con acceso a los puertos locales; el entorno de revisión restringe esas conexiones. CI incluye comprobaciones y build sin credenciales de negocio.
 
-La primera versión incluye un adaptador alternativo de **Shopify headless**: Vantelier controla el frontend; Shopify administra productos, variantes, inventario, pedidos, envíos y checkout. Los precios y la disponibilidad definitiva se resuelven en Shopify. El navegador solamente envía identificadores de variantes y cantidades.
+## Comprobación manual
 
-La [decisión inicial de arquitectura](docs/backend.md) compara Shopify, Medusa y un backend propio; la elección posterior de Medusa se documenta en [la guía local](docs/local-setup.md). Consulta la [guía de integración](docs/shopify.md) para activar el proveedor real.
+1. Abrir `/app` del backend y confirmar los productos publicados en el canal **Vantelier Web**.
+2. Abrir la tienda: los 16 diseños iniciales deben mostrarse, con tallas agotadas si el inventario sigue en cero.
+3. Cambiar nombre, precio o miniatura de un producto en el panel y recargar la tienda. Registrar stock únicamente cuando exista físicamente.
+4. Confirmar que el pago permanece deshabilitado.
 
-## Diseño
-
-Header de navegación compacto, fondo marfil, tipografía de gran peso y una composición editorial centrada en la fotografía. Manrope se sirve localmente; los titulares usan la pila Impact/Arial Black. El resultado exacto de los titulares puede variar por sistema operativo. Los colores y el espaciado global viven en `src/shared/theme/tokens.css`.
-
-La interfaz se adapta a móvil y escritorio. Los diálogos usan el elemento nativo `dialog`, navegación por teclado, cierre con Escape y restitución del foco. Se respeta la preferencia de movimiento reducido.
-
-## Configuración
-
-| Variable                          | Descripción                                                                     |
-| --------------------------------- | ------------------------------------------------------------------------------- |
-| `COMMERCE_PROVIDER`               | `demo` por defecto; `shopify` activa la integración                             |
-| `SHOPIFY_STORE_DOMAIN`            | Dominio canónico `nombre.myshopify.com`, sin protocolo                          |
-| `SHOPIFY_STOREFRONT_ACCESS_TOKEN` | Token **público** de Storefront del canal Headless, utilizado desde el servidor |
-| `SHOPIFY_API_VERSION`             | Versión fijada de la API; inicialmente `2026-10`                                |
-
-No se usan tokens Admin ni se incluyen credenciales en el repositorio. `.env.local` está excluido de Git. El servidor no cambia silenciosamente a datos demo si falla Shopify.
-
-## Alcance y límites
-
-- Los precios y las existencias demo son ilustrativos. Los mockups representan propuestas visuales de la colección, no fotografías de prendas fabricadas.
-- Las imágenes de la colección Relicario se sirven localmente desde `public/images/vantelier`. Son mockups de los 16 diseños de referencia sobre modelos, con vistas de frente y espalda. Los frentes son propuestas complementarias; confirmar estampados, tejidos y colores con muestras físicas antes de vender. Los detalles de tejido y etiqueta son composiciones CSS ilustrativas.
-- La bolsa permanece en memoria y se reinicia al recargar. No reserva inventario.
-- Las variantes de Shopify se muestran con su título completo; el catálogo inicial consulta hasta 24 productos y 100 variantes por producto. La paginación queda para la siguiente fase.
-- El stock, los pedidos y los pagos se administran en Shopify; no existe un panel administrativo local.
-- No se han integrado cuentas de cliente, descuentos en la interfaz, analítica, correos propios ni seguimiento de pedidos. El checkout alojado puede ofrecer sus propias funciones según configuración.
-- La tienda permanece con `noindex` durante preparación. Configurar dominio, metadatos, políticas, fotografías y quitar esa restricción al lanzar.
-
-## Despliegue
-
-La muestra del frontend se puede publicar en **GitHub Pages**. El workflow `Deploy GitHub Pages` valida, exporta y despliega el catálogo con cada push a `main`. Configura el repositorio como público y selecciona **GitHub Actions** en **Settings → Pages**. La [guía de publicación](docs/github-pages.md) detalla los pasos.
-
-```sh
-NEXT_PUBLIC_BASE_PATH=/vantelier-storefront npm run build:pages
-```
-
-La exportación está en `out/` y mantiene los pagos deshabilitados. GitHub Pages no ejecuta el backend ni el endpoint de checkout.
-
-Para una tienda con checkout, utiliza alojamiento compatible con Next.js y rutas de servidor. Configura las variables del proveedor, ejecuta `npm run check` y `npm run build`, y sirve con `npm start`. La integración con Medusa todavía está pendiente.
-
-El workflow `Quality` valida el modo servidor en pull requests y cambios en `main`. El workflow de Pages publica únicamente la versión estática y no activa pagos.
-
-## Antes de producción
-
-Configurar el proveedor de pagos disponible para la empresa en Colombia, costos de envío, impuestos, políticas, dominio y catálogo real. Verificar compras de prueba, falta de stock, pagos rechazados, cancelaciones y reembolsos. Añadir control de frecuencia en el perímetro del endpoint de checkout y observabilidad del servidor. La integración se entrega preparada, no certificada contra una tienda activa.
-
-## Recursos
-
-- [Shopify Storefront API](https://shopify.dev/docs/storefronts/headless/building-with-the-storefront-api)
-- [Carrito y checkout](https://shopify.dev/docs/storefronts/headless/building-with-the-storefront-api/cart/manage)
-- [Documentación de Medusa](https://docs.medusajs.com/learn)
-- [Decisión de backend](docs/backend.md)
-- [Configuración de Shopify](docs/shopify.md)
-
-Todos los derechos reservados. La publicación del código no concede una licencia de uso de la marca o sus diseños. Las dependencias y fuentes conservan sus respectivas licencias.
+Un error 401/403 indica revisar clave publicable y canal; un catálogo vacío indica revisar publicación y asociación al canal. Si falta la configuración, repetir el seed y copiar sus valores. Un error de conexión requiere comprobar que Medusa esté activo en el puerto 9000. Los comandos antiguos de creación de repositorios no son necesarios: se trabaja sobre estos repositorios existentes.

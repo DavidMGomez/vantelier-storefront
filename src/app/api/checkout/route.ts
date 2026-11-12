@@ -1,4 +1,7 @@
-import { getCommerceProvider } from "@/composition/storefront/provider";
+import {
+  getCommerceProvider,
+  getCommerceProviderName,
+} from "@/composition/storefront/provider";
 import { validateLines } from "@/features/commerce/domain/catalog";
 export async function POST(request: Request) {
   const origin = request.headers.get("origin");
@@ -19,7 +22,7 @@ export async function POST(request: Request) {
       { status: 400 },
     );
   }
-  if ((process.env.COMMERCE_PROVIDER || "demo") === "demo")
+  if (getCommerceProviderName() !== "shopify")
     return Response.json(
       {
         error:

@@ -4,12 +4,16 @@ import { beginCheckout } from "@/features/commerce/infrastructure/browser-checko
 import type { Product } from "@/features/commerce/domain/catalog";
 export function StorefrontClient({
   products,
-  demo,
+  checkoutEnabled,
 }: {
   products: Product[];
-  demo: boolean;
+  checkoutEnabled: boolean;
 }) {
   return (
-    <Storefront products={products} checkout={beginCheckout} demo={demo} />
+    <Storefront
+      products={products}
+      checkout={beginCheckout}
+      checkoutEnabled={checkoutEnabled}
+    />
   );
 }

@@ -1,14 +1,17 @@
-import { getCommerceProvider } from "@/composition/storefront/provider";
+import {
+  getCommerceProvider,
+  getCommerceProviderName,
+} from "@/composition/storefront/provider";
 import { StorefrontClient } from "@/composition/storefront/client";
+import { connection } from "next/server";
 export default async function Home() {
+  // El catálogo comercial se consulta por petición; el build no necesita una API activa.
+  if (getCommerceProviderName() !== "demo") await connection();
   const products = await getCommerceProvider().getProducts();
   return (
     <StorefrontClient
       products={products}
-      demo={
-        process.env.GITHUB_PAGES === "true" ||
-        (process.env.COMMERCE_PROVIDER || "demo") === "demo"
-      }
+      checkoutEnabled={getCommerceProviderName() === "shopify"}
     />
   );
 }

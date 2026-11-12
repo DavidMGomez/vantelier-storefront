@@ -12,11 +12,11 @@ import { Modal } from "@/shared/ui/modal";
 export function Storefront({
   products,
   checkout,
-  demo,
+  checkoutEnabled,
 }: {
   products: Product[];
   checkout: (lines: CartLine[]) => Promise<string>;
-  demo: boolean;
+  checkoutEnabled: boolean;
 }) {
   const [category, setCategory] = useState("Todo");
   const [selected, setSelected] = useState<Product | null>(null);
@@ -64,6 +64,7 @@ export function Storefront({
     setError("");
   }
   async function pay() {
+    if (!checkoutEnabled) return;
     setBusy(true);
     setError("");
     try {
@@ -131,6 +132,9 @@ export function Storefront({
           </div>
           <div className="collection-layout">
             <div className="product-grid">
+              {products.length === 0 && (
+                <p>La colección estará disponible próximamente.</p>
+              )}
               {products
                 .filter((p) => category === "Todo" || p.category === category)
                 .map((product) => (
@@ -301,17 +305,19 @@ export function Storefront({
                 </strong>
               </div>
               <p className="detail-note">
-                Envío e impuestos calculados al finalizar. La disponibilidad se
-                confirma en checkout.
+                {checkoutEnabled
+                  ? "Envío e impuestos calculados al finalizar. La disponibilidad se confirma en checkout."
+                  : "La bolsa no reserva existencias. Envíos e impuestos pendientes de configuración."}
               </p>
-              {demo && (
+              {!checkoutEnabled && (
                 <p className="demo-note">
-                  Colección de muestra. Los pagos todavía no están habilitados.
+                  Estamos preparando la tienda. Los pagos todavía no están
+                  habilitados.
                 </p>
               )}
               <button
                 className="button full"
-                disabled={busy || demo}
+                disabled={busy || !checkoutEnabled}
                 onClick={pay}
               >
                 {busy ? "Abriendo checkout…" : "Continuar al pago ⟶"}

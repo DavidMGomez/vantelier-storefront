@@ -13,6 +13,14 @@ export function ProductVisual({
   eager?: boolean;
 }) {
   const atlas = product.lookbook;
+  if (!product.image)
+    return (
+      <span
+        className="product-visual"
+        role="img"
+        aria-label={`${product.name}, imagen pendiente`}
+      />
+    );
   const style = atlas
     ? ({
         "--lookbook-column": atlas.column,
