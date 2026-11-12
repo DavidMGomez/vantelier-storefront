@@ -1,0 +1,978 @@
+[
+  {
+    "id": "vestigio",
+    "name": "Vestigio",
+    "description": "Una escultura que conserva sus huellas. Mármol fracturado y vetas doradas sobre negro mate; firma discreta al frente.",
+    "image": "/images/products/vestigio/frente.webp",
+    "category": "Mármol",
+    "collection": {
+      "id": "demo_relicario",
+      "title": "Relicario",
+      "handle": "relicario"
+    },
+    "colors": ["#161616"],
+    "variants": [
+      {
+        "id": "vestigio-S",
+        "title": "S",
+        "size": "S",
+        "available": true,
+        "price": 149000,
+        "currency": "COP",
+        "color": "Negro"
+      },
+      {
+        "id": "vestigio-M",
+        "title": "M",
+        "size": "M",
+        "available": true,
+        "price": 149000,
+        "currency": "COP",
+        "color": "Negro"
+      },
+      {
+        "id": "vestigio-L",
+        "title": "L",
+        "size": "L",
+        "available": true,
+        "price": 149000,
+        "currency": "COP",
+        "color": "Negro"
+      },
+      {
+        "id": "vestigio-XL",
+        "title": "XL",
+        "size": "XL",
+        "available": true,
+        "price": 149000,
+        "currency": "COP",
+        "color": "Negro"
+      }
+    ],
+    "images": [
+      "/images/products/vestigio/frente.webp",
+      "/images/products/vestigio/espalda.webp"
+    ],
+    "categories": [
+      {
+        "id": "local_Mármol",
+        "name": "Mármol"
+      }
+    ]
+  },
+  {
+    "id": "ofrenda",
+    "name": "Ofrenda",
+    "description": "Una figura ceremonial en oro sobre algodón de blanco óptico. Espalda protagonista y un pequeño símbolo al frente.",
+    "image": "/images/products/ofrenda/frente.webp",
+    "category": "Orfebrería",
+    "collection": {
+      "id": "demo_relicario",
+      "title": "Relicario",
+      "handle": "relicario"
+    },
+    "colors": ["#f8f8f5"],
+    "variants": [
+      {
+        "id": "ofrenda-S",
+        "title": "S",
+        "size": "S",
+        "available": true,
+        "price": 149000,
+        "currency": "COP",
+        "color": "Blanco"
+      },
+      {
+        "id": "ofrenda-M",
+        "title": "M",
+        "size": "M",
+        "available": true,
+        "price": 149000,
+        "currency": "COP",
+        "color": "Blanco"
+      },
+      {
+        "id": "ofrenda-L",
+        "title": "L",
+        "size": "L",
+        "available": true,
+        "price": 149000,
+        "currency": "COP",
+        "color": "Blanco"
+      },
+      {
+        "id": "ofrenda-XL",
+        "title": "XL",
+        "size": "XL",
+        "available": true,
+        "price": 149000,
+        "currency": "COP",
+        "color": "Blanco"
+      }
+    ],
+    "images": [
+      "/images/products/ofrenda/frente.webp",
+      "/images/products/ofrenda/espalda.webp"
+    ],
+    "categories": [
+      {
+        "id": "local_Orfebrería",
+        "name": "Orfebrería"
+      }
+    ]
+  },
+  {
+    "id": "fisura",
+    "name": "Fisura",
+    "description": "Un rostro de piedra ocupa la espalda. Las grietas doradas recorren la pieza como un mapa de su historia.",
+    "image": "/images/products/fisura/frente.webp",
+    "category": "Mármol",
+    "collection": {
+      "id": "demo_relicario",
+      "title": "Relicario",
+      "handle": "relicario"
+    },
+    "colors": ["#161616"],
+    "variants": [
+      {
+        "id": "fisura-S",
+        "title": "S",
+        "size": "S",
+        "available": true,
+        "price": 149000,
+        "currency": "COP",
+        "color": "Negro"
+      },
+      {
+        "id": "fisura-M",
+        "title": "M",
+        "size": "M",
+        "available": true,
+        "price": 149000,
+        "currency": "COP",
+        "color": "Negro"
+      },
+      {
+        "id": "fisura-L",
+        "title": "L",
+        "size": "L",
+        "available": true,
+        "price": 149000,
+        "currency": "COP",
+        "color": "Negro"
+      },
+      {
+        "id": "fisura-XL",
+        "title": "XL",
+        "size": "XL",
+        "available": true,
+        "price": 149000,
+        "currency": "COP",
+        "color": "Negro"
+      }
+    ],
+    "images": [
+      "/images/products/fisura/frente.webp",
+      "/images/products/fisura/espalda.webp"
+    ],
+    "categories": [
+      {
+        "id": "local_Mármol",
+        "name": "Mármol"
+      }
+    ]
+  },
+  {
+    "id": "umbra",
+    "name": "Umbra",
+    "description": "Un eclipse ilumina una escultura fragmentada. Tonos tierra, oro y una silueta amplia.",
+    "image": "/images/products/umbra/frente.webp",
+    "category": "Eclipse",
+    "collection": {
+      "id": "demo_relicario",
+      "title": "Relicario",
+      "handle": "relicario"
+    },
+    "colors": ["#39271f"],
+    "variants": [
+      {
+        "id": "umbra-S",
+        "title": "S",
+        "size": "S",
+        "available": true,
+        "price": 149000,
+        "currency": "COP",
+        "color": "Chocolate"
+      },
+      {
+        "id": "umbra-M",
+        "title": "M",
+        "size": "M",
+        "available": true,
+        "price": 149000,
+        "currency": "COP",
+        "color": "Chocolate"
+      },
+      {
+        "id": "umbra-L",
+        "title": "L",
+        "size": "L",
+        "available": true,
+        "price": 149000,
+        "currency": "COP",
+        "color": "Chocolate"
+      },
+      {
+        "id": "umbra-XL",
+        "title": "XL",
+        "size": "XL",
+        "available": true,
+        "price": 149000,
+        "currency": "COP",
+        "color": "Chocolate"
+      }
+    ],
+    "images": [
+      "/images/products/umbra/frente.webp",
+      "/images/products/umbra/espalda.webp"
+    ],
+    "categories": [
+      {
+        "id": "local_Eclipse",
+        "name": "Eclipse"
+      }
+    ]
+  },
+  {
+    "id": "herencia",
+    "name": "Herencia",
+    "description": "Geometría ceremonial dorada sobre verde oliva mate. Un emblema pequeño conecta frente y espalda.",
+    "image": "/images/products/herencia/frente.webp",
+    "category": "Orfebrería",
+    "collection": {
+      "id": "demo_relicario",
+      "title": "Relicario",
+      "handle": "relicario"
+    },
+    "colors": ["#3c4430"],
+    "variants": [
+      {
+        "id": "herencia-S",
+        "title": "S",
+        "size": "S",
+        "available": true,
+        "price": 149000,
+        "currency": "COP",
+        "color": "Oliva"
+      },
+      {
+        "id": "herencia-M",
+        "title": "M",
+        "size": "M",
+        "available": true,
+        "price": 149000,
+        "currency": "COP",
+        "color": "Oliva"
+      },
+      {
+        "id": "herencia-L",
+        "title": "L",
+        "size": "L",
+        "available": true,
+        "price": 149000,
+        "currency": "COP",
+        "color": "Oliva"
+      },
+      {
+        "id": "herencia-XL",
+        "title": "XL",
+        "size": "XL",
+        "available": true,
+        "price": 149000,
+        "currency": "COP",
+        "color": "Oliva"
+      }
+    ],
+    "images": [
+      "/images/products/herencia/frente.webp",
+      "/images/products/herencia/espalda.webp"
+    ],
+    "categories": [
+      {
+        "id": "local_Orfebrería",
+        "name": "Orfebrería"
+      }
+    ]
+  },
+  {
+    "id": "fragmento",
+    "name": "Fragmento",
+    "description": "Una franja de mármol roto atraviesa la espalda de una camiseta borgoña. Firma vertical y fisuras de oro.",
+    "image": "/images/products/fragmento/frente.webp",
+    "category": "Mármol",
+    "collection": {
+      "id": "demo_relicario",
+      "title": "Relicario",
+      "handle": "relicario"
+    },
+    "colors": ["#4a202c"],
+    "variants": [
+      {
+        "id": "fragmento-S",
+        "title": "S",
+        "size": "S",
+        "available": true,
+        "price": 149000,
+        "currency": "COP",
+        "color": "Borgoña"
+      },
+      {
+        "id": "fragmento-M",
+        "title": "M",
+        "size": "M",
+        "available": true,
+        "price": 149000,
+        "currency": "COP",
+        "color": "Borgoña"
+      },
+      {
+        "id": "fragmento-L",
+        "title": "L",
+        "size": "L",
+        "available": true,
+        "price": 149000,
+        "currency": "COP",
+        "color": "Borgoña"
+      },
+      {
+        "id": "fragmento-XL",
+        "title": "XL",
+        "size": "XL",
+        "available": true,
+        "price": 149000,
+        "currency": "COP",
+        "color": "Borgoña"
+      }
+    ],
+    "images": [
+      "/images/products/fragmento/frente.webp",
+      "/images/products/fragmento/espalda.webp"
+    ],
+    "categories": [
+      {
+        "id": "local_Mármol",
+        "name": "Mármol"
+      }
+    ]
+  },
+  {
+    "id": "tumbaga",
+    "name": "Tumbaga",
+    "description": "Una máscara ceremonial a gran escala dialoga con una composición tipográfica asimétrica.",
+    "image": "/images/products/tumbaga/frente.webp",
+    "category": "Orfebrería",
+    "collection": {
+      "id": "demo_relicario",
+      "title": "Relicario",
+      "handle": "relicario"
+    },
+    "colors": ["#161616"],
+    "variants": [
+      {
+        "id": "tumbaga-S",
+        "title": "S",
+        "size": "S",
+        "available": true,
+        "price": 149000,
+        "currency": "COP",
+        "color": "Negro"
+      },
+      {
+        "id": "tumbaga-M",
+        "title": "M",
+        "size": "M",
+        "available": true,
+        "price": 149000,
+        "currency": "COP",
+        "color": "Negro"
+      },
+      {
+        "id": "tumbaga-L",
+        "title": "L",
+        "size": "L",
+        "available": true,
+        "price": 149000,
+        "currency": "COP",
+        "color": "Negro"
+      },
+      {
+        "id": "tumbaga-XL",
+        "title": "XL",
+        "size": "XL",
+        "available": true,
+        "price": 149000,
+        "currency": "COP",
+        "color": "Negro"
+      }
+    ],
+    "images": [
+      "/images/products/tumbaga/frente.webp",
+      "/images/products/tumbaga/espalda.webp"
+    ],
+    "categories": [
+      {
+        "id": "local_Orfebrería",
+        "name": "Orfebrería"
+      }
+    ]
+  },
+  {
+    "id": "memoria",
+    "name": "Memoria",
+    "description": "Tres fragmentos de una misma historia: escultura, figura y medallón. Un archivo visual sobre blanco óptico.",
+    "image": "/images/products/memoria/frente.webp",
+    "category": "Orfebrería",
+    "collection": {
+      "id": "demo_relicario",
+      "title": "Relicario",
+      "handle": "relicario"
+    },
+    "colors": ["#f8f8f5"],
+    "variants": [
+      {
+        "id": "memoria-S",
+        "title": "S",
+        "size": "S",
+        "available": true,
+        "price": 149000,
+        "currency": "COP",
+        "color": "Blanco"
+      },
+      {
+        "id": "memoria-M",
+        "title": "M",
+        "size": "M",
+        "available": true,
+        "price": 149000,
+        "currency": "COP",
+        "color": "Blanco"
+      },
+      {
+        "id": "memoria-L",
+        "title": "L",
+        "size": "L",
+        "available": true,
+        "price": 149000,
+        "currency": "COP",
+        "color": "Blanco"
+      },
+      {
+        "id": "memoria-XL",
+        "title": "XL",
+        "size": "XL",
+        "available": true,
+        "price": 149000,
+        "currency": "COP",
+        "color": "Blanco"
+      }
+    ],
+    "images": [
+      "/images/products/memoria/frente.webp",
+      "/images/products/memoria/espalda.webp"
+    ],
+    "categories": [
+      {
+        "id": "local_Orfebrería",
+        "name": "Orfebrería"
+      }
+    ]
+  },
+  {
+    "id": "umbral",
+    "name": "Umbral",
+    "description": "Un arco de piedra protege una figura dorada. Una puerta a otra época sobre negro mate.",
+    "image": "/images/products/umbral/frente.webp",
+    "category": "Orfebrería",
+    "collection": {
+      "id": "demo_relicario",
+      "title": "Relicario",
+      "handle": "relicario"
+    },
+    "colors": ["#161616"],
+    "variants": [
+      {
+        "id": "umbral-S",
+        "title": "S",
+        "size": "S",
+        "available": true,
+        "price": 149000,
+        "currency": "COP",
+        "color": "Negro"
+      },
+      {
+        "id": "umbral-M",
+        "title": "M",
+        "size": "M",
+        "available": true,
+        "price": 149000,
+        "currency": "COP",
+        "color": "Negro"
+      },
+      {
+        "id": "umbral-L",
+        "title": "L",
+        "size": "L",
+        "available": true,
+        "price": 149000,
+        "currency": "COP",
+        "color": "Negro"
+      },
+      {
+        "id": "umbral-XL",
+        "title": "XL",
+        "size": "XL",
+        "available": true,
+        "price": 149000,
+        "currency": "COP",
+        "color": "Negro"
+      }
+    ],
+    "images": [
+      "/images/products/umbral/frente.webp",
+      "/images/products/umbral/espalda.webp"
+    ],
+    "categories": [
+      {
+        "id": "local_Orfebrería",
+        "name": "Orfebrería"
+      }
+    ]
+  },
+  {
+    "id": "origen",
+    "name": "Origen",
+    "description": "Un busto clásico emerge de la parte inferior de la espalda. Mármol, oro y tierra en equilibrio.",
+    "image": "/images/products/origen/frente.webp",
+    "category": "Mármol",
+    "collection": {
+      "id": "demo_relicario",
+      "title": "Relicario",
+      "handle": "relicario"
+    },
+    "colors": ["#39271f"],
+    "variants": [
+      {
+        "id": "origen-S",
+        "title": "S",
+        "size": "S",
+        "available": true,
+        "price": 149000,
+        "currency": "COP",
+        "color": "Chocolate"
+      },
+      {
+        "id": "origen-M",
+        "title": "M",
+        "size": "M",
+        "available": true,
+        "price": 149000,
+        "currency": "COP",
+        "color": "Chocolate"
+      },
+      {
+        "id": "origen-L",
+        "title": "L",
+        "size": "L",
+        "available": true,
+        "price": 149000,
+        "currency": "COP",
+        "color": "Chocolate"
+      },
+      {
+        "id": "origen-XL",
+        "title": "XL",
+        "size": "XL",
+        "available": true,
+        "price": 149000,
+        "currency": "COP",
+        "color": "Chocolate"
+      }
+    ],
+    "images": [
+      "/images/products/origen/frente.webp",
+      "/images/products/origen/espalda.webp"
+    ],
+    "categories": [
+      {
+        "id": "local_Mármol",
+        "name": "Mármol"
+      }
+    ]
+  },
+  {
+    "id": "custodia",
+    "name": "Custodia",
+    "description": "Dos manos de mármol rodean un eclipse. Una pieza sobre aquello que decidimos conservar.",
+    "image": "/images/products/custodia/frente.webp",
+    "category": "Eclipse",
+    "collection": {
+      "id": "demo_relicario",
+      "title": "Relicario",
+      "handle": "relicario"
+    },
+    "colors": ["#161616"],
+    "variants": [
+      {
+        "id": "custodia-S",
+        "title": "S",
+        "size": "S",
+        "available": true,
+        "price": 149000,
+        "currency": "COP",
+        "color": "Negro"
+      },
+      {
+        "id": "custodia-M",
+        "title": "M",
+        "size": "M",
+        "available": true,
+        "price": 149000,
+        "currency": "COP",
+        "color": "Negro"
+      },
+      {
+        "id": "custodia-L",
+        "title": "L",
+        "size": "L",
+        "available": true,
+        "price": 149000,
+        "currency": "COP",
+        "color": "Negro"
+      },
+      {
+        "id": "custodia-XL",
+        "title": "XL",
+        "size": "XL",
+        "available": true,
+        "price": 149000,
+        "currency": "COP",
+        "color": "Negro"
+      }
+    ],
+    "images": [
+      "/images/products/custodia/frente.webp",
+      "/images/products/custodia/espalda.webp"
+    ],
+    "categories": [
+      {
+        "id": "local_Eclipse",
+        "name": "Eclipse"
+      }
+    ]
+  },
+  {
+    "id": "estrato",
+    "name": "Estrato",
+    "description": "Capas de piedra, grietas y tiempo. Una composición diagonal sobre verde oliva mate.",
+    "image": "/images/products/estrato/frente.webp",
+    "category": "Mármol",
+    "collection": {
+      "id": "demo_relicario",
+      "title": "Relicario",
+      "handle": "relicario"
+    },
+    "colors": ["#3c4430"],
+    "variants": [
+      {
+        "id": "estrato-S",
+        "title": "S",
+        "size": "S",
+        "available": true,
+        "price": 149000,
+        "currency": "COP",
+        "color": "Oliva"
+      },
+      {
+        "id": "estrato-M",
+        "title": "M",
+        "size": "M",
+        "available": true,
+        "price": 149000,
+        "currency": "COP",
+        "color": "Oliva"
+      },
+      {
+        "id": "estrato-L",
+        "title": "L",
+        "size": "L",
+        "available": true,
+        "price": 149000,
+        "currency": "COP",
+        "color": "Oliva"
+      },
+      {
+        "id": "estrato-XL",
+        "title": "XL",
+        "size": "XL",
+        "available": true,
+        "price": 149000,
+        "currency": "COP",
+        "color": "Oliva"
+      }
+    ],
+    "images": [
+      "/images/products/estrato/frente.webp",
+      "/images/products/estrato/espalda.webp"
+    ],
+    "categories": [
+      {
+        "id": "local_Mármol",
+        "name": "Mármol"
+      }
+    ]
+  },
+  {
+    "id": "reliquia",
+    "name": "Reliquia",
+    "description": "Una máscara dorada sobre borgoña mate. Forma ceremonial, presencia contemporánea.",
+    "image": "/images/products/reliquia/frente.webp",
+    "category": "Orfebrería",
+    "collection": {
+      "id": "demo_relicario",
+      "title": "Relicario",
+      "handle": "relicario"
+    },
+    "colors": ["#4a202c"],
+    "variants": [
+      {
+        "id": "reliquia-S",
+        "title": "S",
+        "size": "S",
+        "available": true,
+        "price": 149000,
+        "currency": "COP",
+        "color": "Borgoña"
+      },
+      {
+        "id": "reliquia-M",
+        "title": "M",
+        "size": "M",
+        "available": true,
+        "price": 149000,
+        "currency": "COP",
+        "color": "Borgoña"
+      },
+      {
+        "id": "reliquia-L",
+        "title": "L",
+        "size": "L",
+        "available": true,
+        "price": 149000,
+        "currency": "COP",
+        "color": "Borgoña"
+      },
+      {
+        "id": "reliquia-XL",
+        "title": "XL",
+        "size": "XL",
+        "available": true,
+        "price": 149000,
+        "currency": "COP",
+        "color": "Borgoña"
+      }
+    ],
+    "images": [
+      "/images/products/reliquia/frente.webp",
+      "/images/products/reliquia/espalda.webp"
+    ],
+    "categories": [
+      {
+        "id": "local_Orfebrería",
+        "name": "Orfebrería"
+      }
+    ]
+  },
+  {
+    "id": "latencia",
+    "name": "Latencia",
+    "description": "El monograma V aparece en el centro de un eclipse. Una composición contenida sobre negro mate.",
+    "image": "/images/products/latencia/frente.webp",
+    "category": "Eclipse",
+    "collection": {
+      "id": "demo_relicario",
+      "title": "Relicario",
+      "handle": "relicario"
+    },
+    "colors": ["#161616"],
+    "variants": [
+      {
+        "id": "latencia-S",
+        "title": "S",
+        "size": "S",
+        "available": true,
+        "price": 149000,
+        "currency": "COP",
+        "color": "Negro"
+      },
+      {
+        "id": "latencia-M",
+        "title": "M",
+        "size": "M",
+        "available": true,
+        "price": 149000,
+        "currency": "COP",
+        "color": "Negro"
+      },
+      {
+        "id": "latencia-L",
+        "title": "L",
+        "size": "L",
+        "available": true,
+        "price": 149000,
+        "currency": "COP",
+        "color": "Negro"
+      },
+      {
+        "id": "latencia-XL",
+        "title": "XL",
+        "size": "XL",
+        "available": true,
+        "price": 149000,
+        "currency": "COP",
+        "color": "Negro"
+      }
+    ],
+    "images": [
+      "/images/products/latencia/frente.webp",
+      "/images/products/latencia/espalda.webp"
+    ],
+    "categories": [
+      {
+        "id": "local_Eclipse",
+        "name": "Eclipse"
+      }
+    ]
+  },
+  {
+    "id": "aureo",
+    "name": "Áureo",
+    "description": "Oro, mármol y escultura en tres franjas verticales. Un contraste de materias sobre blanco óptico.",
+    "image": "/images/products/aureo/frente.webp",
+    "category": "Orfebrería",
+    "collection": {
+      "id": "demo_relicario",
+      "title": "Relicario",
+      "handle": "relicario"
+    },
+    "colors": ["#f8f8f5"],
+    "variants": [
+      {
+        "id": "aureo-S",
+        "title": "S",
+        "size": "S",
+        "available": true,
+        "price": 149000,
+        "currency": "COP",
+        "color": "Blanco"
+      },
+      {
+        "id": "aureo-M",
+        "title": "M",
+        "size": "M",
+        "available": true,
+        "price": 149000,
+        "currency": "COP",
+        "color": "Blanco"
+      },
+      {
+        "id": "aureo-L",
+        "title": "L",
+        "size": "L",
+        "available": true,
+        "price": 149000,
+        "currency": "COP",
+        "color": "Blanco"
+      },
+      {
+        "id": "aureo-XL",
+        "title": "XL",
+        "size": "XL",
+        "available": true,
+        "price": 149000,
+        "currency": "COP",
+        "color": "Blanco"
+      }
+    ],
+    "images": [
+      "/images/products/aureo/frente.webp",
+      "/images/products/aureo/espalda.webp"
+    ],
+    "categories": [
+      {
+        "id": "local_Orfebrería",
+        "name": "Orfebrería"
+      }
+    ]
+  },
+  {
+    "id": "legado",
+    "name": "Legado",
+    "description": "Un busto de mármol y sus grietas doradas. Relicario: una colección sobre lo que permanece.",
+    "image": "/images/products/legado/frente.webp",
+    "category": "Mármol",
+    "collection": {
+      "id": "demo_relicario",
+      "title": "Relicario",
+      "handle": "relicario"
+    },
+    "colors": ["#161616"],
+    "variants": [
+      {
+        "id": "legado-S",
+        "title": "S",
+        "size": "S",
+        "available": true,
+        "price": 149000,
+        "currency": "COP",
+        "color": "Negro"
+      },
+      {
+        "id": "legado-M",
+        "title": "M",
+        "size": "M",
+        "available": true,
+        "price": 149000,
+        "currency": "COP",
+        "color": "Negro"
+      },
+      {
+        "id": "legado-L",
+        "title": "L",
+        "size": "L",
+        "available": true,
+        "price": 149000,
+        "currency": "COP",
+        "color": "Negro"
+      },
+      {
+        "id": "legado-XL",
+        "title": "XL",
+        "size": "XL",
+        "available": true,
+        "price": 149000,
+        "currency": "COP",
+        "color": "Negro"
+      }
+    ],
+    "images": [
+      "/images/products/legado/frente.webp",
+      "/images/products/legado/espalda.webp"
+    ],
+    "categories": [
+      {
+        "id": "local_Mármol",
+        "name": "Mármol"
+      }
+    ]
+  }
+]

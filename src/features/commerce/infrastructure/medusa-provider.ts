@@ -1,3 +1,10 @@
+import type { CatalogReader } from "../application/ports/catalog-reader";
+import {
+  catalogParams,
+  type CatalogFacets,
+  type CatalogPage,
+  type CatalogRequest,
+} from "../domain/catalog-filters";
 import type { CommerceProvider } from "../application/ports/commerce-provider";
 import type { Product, Variant } from "../domain/catalog";
 
@@ -16,6 +23,8 @@ type MedusaVariant = {
 type MedusaProduct = {
   id: string;
   title: string;
+  created_at?: string;
+  type?: { id: string; value: string } | null;
   description?: string | null;
   thumbnail?: string | null;
   images?: { url: string }[];
@@ -32,7 +41,9 @@ type MedusaProduct = {
 };
 type Config = { backendUrl: string; publishableKey: string; regionId: string };
 
-export function createMedusaProvider(config: Config): CommerceProvider {
+export function createMedusaProvider(
+  config: Config,
+): CommerceProvider & CatalogReader {
   let backend: URL;
   try {
     backend = new URL(config.backendUrl);
@@ -57,7 +68,55 @@ export function createMedusaProvider(config: Config): CommerceProvider {
     throw new Error("Configura MEDUSA_REGION_ID con la región Colombia.");
   const base = backend.toString().replace(/\/+$/, "");
 
+  async function readCatalog(path: string, params: URLSearchParams) {
+    params.set("region_id", config.regionId);
+    const response = await fetch(
+      `${base}/store/vantelier/catalog${path}?${params}`,
+      {
+        headers: { "x-publishable-api-key": config.publishableKey },
+        cache: "no-store",
+        signal: AbortSignal.timeout(15000),
+      },
+    );
+    if (!response.ok)
+      throw new Error(
+        `No se pudo consultar el catálogo de Medusa (HTTP ${response.status}).`,
+      );
+    return response.json();
+  }
   return {
+    async getCatalog(request: CatalogRequest): Promise<CatalogPage> {
+      const page = await readCatalog("", catalogParams(request));
+      if (
+        !Array.isArray(page.products) ||
+        !Number.isInteger(page.count) ||
+        page.count < 0
+      )
+        throw new Error("Medusa devolvió una página de catálogo inválida.");
+      return {
+        products: page.products.map(mapProduct),
+        count: page.count,
+        offset: page.offset,
+        limit: page.limit,
+      };
+    },
+    async getFacets(): Promise<CatalogFacets> {
+      const data = await readCatalog("/facets", new URLSearchParams());
+      const facets = data.facets;
+      if (
+        !facets ||
+        ![
+          facets.collections,
+          facets.categories,
+          facets.types,
+          facets.sizes,
+          facets.colors,
+        ].every(Array.isArray) ||
+        !Number.isFinite(facets.priceCeiling)
+      )
+        throw new Error("Medusa devolvió filtros inválidos.");
+      return facets;
+    },
     async getProducts() {
       const products: Product[] = [];
       const seen = new Set<string>();
@@ -135,6 +194,8 @@ function mapProduct(product: MedusaProduct): Product {
   return {
     id: product.id,
     name: product.title,
+    type: product.type || undefined,
+    createdAt: product.created_at,
     description: product.description || "",
     image: images[0] || "",
     images,

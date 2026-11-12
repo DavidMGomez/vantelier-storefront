@@ -16,7 +16,7 @@ const result = spawnSync(
     env: {
       ...process.env,
       GITHUB_PAGES: "true",
-      COMMERCE_PROVIDER: "demo",
+      COMMERCE_PROVIDER: "local",
       NEXT_PUBLIC_BASE_PATH: basePath,
     },
   },

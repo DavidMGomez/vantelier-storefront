@@ -1,14 +1,16 @@
 "use client";
-import { useState } from "react";
+import { useState, useEffect, useLayoutEffect, useRef } from "react";
 import Link from "next/link";
 import { Hero } from "./hero";
 import { CatalogControls } from "./catalog-controls";
 import {
   activeFilterCount,
-  catalogFacets,
   emptyFilters,
-  filterCatalog,
   matchingVariants,
+  type CatalogPage,
+  type CatalogFacets,
+  type CatalogLoader,
+  type CatalogFilters,
 } from "../../domain/catalog-filters";
 import { ArrowRight, ArrowUpRight, ShoppingBag } from "lucide-react";
 import { BrandSymbol, BrandWordmark } from "./brand-wordmark";
@@ -19,15 +21,91 @@ import type { CartLine, Product } from "../../domain/catalog";
 import { availabilityLabel, formatMoney } from "../../domain/catalog";
 import { Modal } from "@/shared/ui/modal";
 export function Storefront({
-  products,
+  simulated = false,
+  initialPage,
+  facets,
+  loadCatalog,
   checkout,
   checkoutEnabled,
 }: {
-  products: Product[];
+  simulated?: boolean;
+  initialPage: CatalogPage;
+  facets: CatalogFacets;
+  loadCatalog: CatalogLoader;
   checkout: (lines: CartLine[]) => Promise<string>;
   checkoutEnabled: boolean;
 }) {
   const [filters, setFilters] = useState(emptyFilters);
+  const [pageFilters, setPageFilters] = useState(emptyFilters);
+
+  const [page, setPage] = useState(initialPage);
+  const [knownProducts, setKnownProducts] = useState(initialPage.products);
+  const [offset, setOffset] = useState(0);
+  const [loading, setLoading] = useState(false);
+  const [catalogError, setCatalogError] = useState("");
+  const [retry, setRetry] = useState(0);
+  const initialized = useRef(false);
+  const resultsRef = useRef<HTMLDivElement>(null);
+  const scrollAfterPage = useRef(false);
+  function changeFilters(next: CatalogFilters) {
+    if (JSON.stringify(next) === JSON.stringify(filters) && offset === 0)
+      return;
+    scrollAfterPage.current = false;
+    setLoading(true);
+    setCatalogError("");
+    setOffset(0);
+    setFilters(next);
+  }
+  function changePage(next: number) {
+    scrollAfterPage.current = true;
+    setLoading(true);
+    setCatalogError("");
+    setOffset(next);
+  }
+  useEffect(() => {
+    if (!initialized.current) {
+      initialized.current = true;
+      return;
+    }
+    const controller = new AbortController();
+    const timer = setTimeout(() => {
+      loadCatalog({ filters, offset, limit: 12 }, controller.signal)
+        .then((result) => {
+          if (controller.signal.aborted) return;
+          setPage(result);
+          setPageFilters(filters);
+          setKnownProducts((previous) => [
+            ...new Map(
+              [...previous, ...result.products].map((product) => [
+                product.id,
+                product,
+              ]),
+            ).values(),
+          ]);
+          setLoading(false);
+        })
+        .catch((error) => {
+          if (controller.signal.aborted) return;
+          setCatalogError(
+            error instanceof Error
+              ? error.message
+              : "No se pudo actualizar el catálogo.",
+          );
+          setLoading(false);
+        });
+    }, 250);
+    return () => {
+      clearTimeout(timer);
+      controller.abort();
+    };
+  }, [filters, offset, loadCatalog, retry]);
+
+  useLayoutEffect(() => {
+    if (!scrollAfterPage.current) return;
+    scrollAfterPage.current = false;
+    resultsRef.current?.focus({ preventScroll: true });
+    resultsRef.current?.scrollIntoView({ block: "start", behavior: "instant" });
+  }, [page]);
   const [selected, setSelected] = useState<Product | null>(null);
   const [variantId, setVariantId] = useState("");
   const [cart, setCart] = useState<CartLine[]>([]);
@@ -36,7 +114,7 @@ export function Storefront({
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
-  const facets = catalogFacets(products);
+
   const collection = facets.collections.find(
     (item) => item.id === filters.collectionId,
   );
@@ -46,7 +124,7 @@ export function Storefront({
       ? facets.collections[0].title
       : "Las piezas");
   const items = cart.flatMap((line) => {
-    const product = products.find((p) =>
+    const product = knownProducts.find((p) =>
       p.variants.some((v) => v.id === line.variantId),
     );
     const variant = product?.variants.find((v) => v.id === line.variantId);
@@ -57,14 +135,14 @@ export function Storefront({
     0,
   );
   const currencies = new Set(items.map((line) => line.variant.currency));
-  const filteredProducts = filterCatalog(products, filters);
+  const filteredProducts = page.products;
   const selectedVariant =
     selected?.variants.find((variant) => variant.id === variantId) ||
     selected?.variants[0];
   function openProduct(product: Product) {
     setSelected(product);
     const matches = matchingVariants(product, {
-      ...filters,
+      ...pageFilters,
       availableOnly: false,
     });
     setVariantId(
@@ -112,7 +190,7 @@ export function Storefront({
       </a>
       <header className="header">
         <nav aria-label="Principal">
-          <a href="#coleccion" onClick={() => setFilters(emptyFilters)}>
+          <a href="#coleccion" onClick={() => changeFilters(emptyFilters)}>
             Colecciones
           </a>
           <a href="#universo">Universo</a>
@@ -136,9 +214,14 @@ export function Storefront({
         </button>
       </header>
       <main>
+        {simulated && (
+          <p className="simulation-banner">
+            Demostración · Precios y stock simulados · Compras deshabilitadas
+          </p>
+        )}
         <Hero
           onDiscover={() =>
-            setFilters({
+            changeFilters({
               ...emptyFilters,
               collectionId:
                 facets.collections.find(
@@ -160,15 +243,41 @@ export function Storefront({
           <CatalogControls
             facets={facets}
             filters={filters}
-            count={filteredProducts.length}
-            onChange={setFilters}
+            count={page.count}
+            loading={loading}
+            onChange={changeFilters}
           />
-          <div className="collection-layout">
-            <div className="product-grid">
+          {catalogError && (
+            <div className="catalog-request-error" role="alert">
+              <p>{catalogError}</p>
+              <button
+                className="text-link"
+                onClick={() => {
+                  setCatalogError("");
+                  setLoading(true);
+                  setRetry((value) => value + 1);
+                }}
+              >
+                Reintentar <ArrowRight size={18} aria-hidden="true" />
+              </button>
+            </div>
+          )}
+          <div
+            className="collection-layout"
+            aria-busy={loading}
+            hidden={!!catalogError}
+          >
+            <div
+              className="product-grid"
+              inert={loading}
+              ref={resultsRef}
+              tabIndex={-1}
+              aria-label="Resultados del catálogo"
+            >
               {filteredProducts.length === 0 && (
                 <div className="catalog-empty">
                   <h3>
-                    {products.length === 0
+                    {page.count === 0 && activeFilterCount(filters) === 0
                       ? "Las próximas piezas están en camino."
                       : "No encontramos prendas con estos filtros."}
                   </h3>
@@ -180,7 +289,7 @@ export function Storefront({
                   {activeFilterCount(filters) > 0 && (
                     <button
                       className="text-link"
-                      onClick={() => setFilters(emptyFilters)}
+                      onClick={() => changeFilters(emptyFilters)}
                     >
                       Ver todas las piezas{" "}
                       <ArrowRight size={18} aria-hidden="true" />
@@ -192,13 +301,38 @@ export function Storefront({
                 <ProductCard
                   key={product.id}
                   product={product}
-                  visibleVariants={matchingVariants(product, filters)}
-                  selectedSize={filters.size}
+                  visibleVariants={matchingVariants(product, pageFilters)}
+                  selectedSize={pageFilters.size}
                   onOpen={() => openProduct(product)}
                 />
               ))}
             </div>
           </div>
+          {!catalogError && page.count > page.limit && (
+            <nav
+              className="catalog-pagination"
+              aria-label="Páginas del catálogo"
+            >
+              <button
+                disabled={loading || page.offset === 0}
+                onClick={() =>
+                  changePage(Math.max(0, page.offset - page.limit))
+                }
+              >
+                Anterior
+              </button>
+              <span>
+                Página {Math.floor(page.offset / page.limit) + 1} de{" "}
+                {Math.ceil(page.count / page.limit)}
+              </span>
+              <button
+                disabled={loading || page.offset + page.limit >= page.count}
+                onClick={() => changePage(page.offset + page.limit)}
+              >
+                Siguiente
+              </button>
+            </nav>
+          )}
         </section>
         <section
           id="universo"

@@ -1,6 +1,6 @@
 # Colección Relicario
 
-Esta guía describe los recursos del modo demo y la identidad visual. El catálogo conectado a Medusa utiliza fotografías individuales subidas desde el panel; el seed no incluye estas láminas ni sus instrucciones de recorte. El hero sigue siendo un recurso del frontend.
+Esta guía describe los recursos del modo local y la identidad visual. El catálogo conectado a Medusa utiliza fotografías individuales subidas desde el panel; el seed no incluye fotos de demostración. El hero sigue siendo un recurso del frontend.
 
 ## Fotografías del catálogo Medusa
 
@@ -18,9 +18,9 @@ La revisión solicitada elimina el efecto lavado de la tela. Usar colores unifor
 
 ## Archivos y presentación
 
-Las cuatro láminas locales contienen cuatro columnas y dos filas: frentes arriba y espaldas abajo. `ProductVisual` muestra una celda mediante recorte CSS; `ProductGallery` controla la selección. Así se comparte una descarga por grupo de cuatro diseños. La ficha de producto, la tarjeta y la bolsa usan el mismo componente para evitar mostrar la lámina completa.
+Los 16 diseños tienen 32 fotos individuales en `public/images/products/<id>/frente.webp` y `espalda.webp`. Cada archivo mide 384 × 512 píxeles (3:4): es un recorte exacto, codificado en WebP sin pérdida, de las cuatro láminas originales. Las láminas permanecen en el historial de Git y ya no se publican. No se amplían ni se reconstruyen detalles.
 
-Los archivos activos son `01-04-signature.png`, `05-08-signature.png`, `09-12-signature.png` y `13-16-signature.png`. Los nombres de revisión evitan reutilizar las imágenes anteriores almacenadas en caché.
+`src/features/commerce/infrastructure/data/catalog.json` reúne los productos, variantes y rutas de fotos. El proveedor local importa ese JSON y lo consulta en memoria. La ficha, la tarjeta y la bolsa muestran los mismos archivos con `ProductVisual`; `ProductGallery` controla su orden y selección. No hay posiciones de cuadrícula ni recortes CSS especiales para la demostración.
 
 El hero usa `hero-signature.png`: un modelo de frente, con gafas negras envolventes inspiradas en Prada PR D10S, camiseta blanca mate y logo Vantelier grueso en el pecho. La imagen PNG tiene transparencia real. El titular es texto HTML accesible en un bloque lateral; el modelo ocupa un panel fotográfico independiente. En móvil ambos bloques se apilan. La campaña sigue siendo contenido editorial del frontend, independiente del catálogo administrado en Medusa.
 
@@ -30,7 +30,7 @@ Los 16 diseños comparten una firma de letras mayúsculas sans serif de peso alt
 
 `BrandWordmark` aplica esta identidad a la cabecera, el pie, la etiqueta editorial y el panel de marca. La V se dibuja en SVG con una interrupción diagonal y un acento de oro mate (`#b38a42`); el conjunto tiene un nombre accesible y escala con el tamaño de letra.
 
-La imagen original y las revisiones se conservan en `generated_images`. Las copias utilizadas por la aplicación están en `public/images/vantelier` y se incluyen cuando se prepara el repositorio del frontend.
+Los recursos que utiliza la aplicación se versionan en `public/images/` y se incluyen en la exportación estática.
 
 Los precios y las existencias son demostrativos. Los mockups requieren validación con las prendas físicas antes de presentarse como fotografías de producto final.
 

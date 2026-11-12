@@ -1,17 +1,28 @@
 "use client";
 import { Storefront } from "@/features/commerce/presentation/components/storefront";
 import { beginCheckout } from "@/features/commerce/infrastructure/browser-checkout";
-import type { Product } from "@/features/commerce/domain/catalog";
+import { loadCatalog } from "@/features/commerce/infrastructure/browser-catalog";
+import type {
+  CatalogPage,
+  CatalogFacets,
+} from "@/features/commerce/domain/catalog-filters";
 export function StorefrontClient({
-  products,
+  simulated,
+  initialPage,
+  facets,
   checkoutEnabled,
 }: {
-  products: Product[];
+  simulated: boolean;
+  initialPage: CatalogPage;
+  facets: CatalogFacets;
   checkoutEnabled: boolean;
 }) {
   return (
     <Storefront
-      products={products}
+      simulated={simulated}
+      initialPage={initialPage}
+      facets={facets}
+      loadCatalog={loadCatalog}
       checkout={beginCheckout}
       checkoutEnabled={checkoutEnabled}
     />

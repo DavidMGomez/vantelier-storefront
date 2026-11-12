@@ -1,0 +1,4 @@
+interface:
+  display_name: "Vantelier · Revisor estricto"
+  short_description: "Revisión par de seguridad, contratos y regresiones"
+  default_prompt: "Usa $vantelier-strict-review para revisar los cambios de Vantelier con evidencias y priorizar las correcciones."

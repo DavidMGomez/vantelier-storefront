@@ -1,6 +1,6 @@
 # Backend vigente: Medusa
 
-El frontend usa Medusa como proveedor predeterminado. Productos, precios COP, fotos, colecciones, categorías, opciones e inventario proceden de su Store API. Next consulta el catálogo desde el servidor; la interfaz mantiene búsqueda, filtros y bolsa en el navegador.
+El frontend usa Medusa como proveedor predeterminado. Productos, precios COP, fotos, colecciones, categorías, opciones e inventario proceden de su Store API. Next consulta el catálogo desde el servidor; Medusa resuelve búsqueda, filtros, orden y paginación. La bolsa continúa en el navegador.
 
 - [Arranque local](local-setup.md)
 - [Administración del catálogo](catalogo.md)

@@ -22,17 +22,27 @@ Para retirar completamente una prenda, pásala a borrador o quítala del canal d
 
 ## Filtros y alcance
 
-- Búsqueda por palabras, insensible a tildes y mayúsculas.
-- Colección; categoría y color cuando existen datos nativos; talla; precio mínimo y máximo COP mediante un slider de dos controles; solo disponibles.
-- Orden por catálogo, nombre o precio mínimo. Cuando las variantes tienen precios distintos se muestra «Desde».
+- Búsqueda nativa de Medusa (`q`) sobre los campos de producto.
+- Colección; categoría, tipo de prenda y color cuando existen datos nativos; talla; precio mínimo y máximo COP mediante un slider de dos controles; solo disponibles.
+- Orden por catálogo, novedades, antigüedad, nombre o precio mínimo. Cuando las variantes tienen precios distintos se muestra «Desde».
 - El slider se ajusta al precio máximo del catálogo, en pasos de $1.000 COP; sus extremos no se pueden cruzar y admiten teclado.
 - Talla, color, precio y disponibilidad deben coincidir en la misma variante. Un rango invertido muestra una explicación y cero resultados.
 - Contador, estado vacío y acción para limpiar filtros. La selección se reinicia al recargar; todavía no se guarda en la URL.
 
-Next consulta **todas las páginas** de `/store/products` desde el servidor con región, clave pública y sin caché. Los filtros se aplican en el navegador al catálogo completo, adecuado para las 16 prendas actuales; no se filtra solo una página ni se usa el catálogo demo como respaldo.
+El navegador solicita `/api/catalog` a Next, que consulta `/store/vantelier/catalog` en Medusa. **Búsqueda, filtros, orden y paginación se resuelven en el backend**. El navegador recibe 12 productos por página y el total real; no descarga todo el catálogo para filtrarlo. Las facetas se obtienen de `/store/vantelier/catalog/facets`, independientes de la página visible.
 
-Para crecer a cientos o miles de productos, trasladar búsqueda y paginación al servidor. La Store API admite `collection_id`, `category_id`, `q`, `order`, `limit` y `offset`; los rangos sobre precios calculados y la disponibilidad por variante requieren validar la consulta o añadir un endpoint/índice específico. No se presenta una búsqueda facetada remota como implementada.
+La ruta utiliza los filtros nativos de producto (`q`, `collection_id`, `category_id`, `type_id`) y los cálculos oficiales de precios e inventario por canal. Los criterios de talla, color, precio y disponibilidad se combinan en la misma variante antes de ordenar y paginar. Las solicitudes se agrupan durante 250 ms y se cancelan al cambiar de selección; un error muestra «Reintentar» y no reemplaza resultados con demo.
+
+Al cambiar de página, el foco y el scroll vuelven al inicio de los resultados debajo de la cabecera, antes de dibujar la nueva página. Cambiar un filtro vuelve a la primera página. La bolsa conserva las prendas consultadas en otras páginas.
+
+La evaluación de precio/stock ocurre en Medusa, en lotes de 100 candidatos filtrados, con un límite explícito de 5.000 por consulta; las facetas recorren el catálogo visible del canal. Para superar ese volumen debe incorporarse un índice, sin truncar resultados silenciosamente. No se necesita Redis ni un motor externo para esta implementación.
+
+Tipos, categorías y colores aparecen al configurarlos en Medusa; no se inventan opciones vacías. Referencias: [Cole Buxton](https://www.colebuxton.com/collections/t-shirts) (tipo, color y talla) y [Represent](https://row.representclo.com/collections/thoroughbred-collection) (novedades y precio). «Más vendidos» queda pendiente de pedidos reales.
 
 `metadata.category` (Mármol, Orfebrería, Eclipse) se conserva como estilo de las prendas antiguas. No se confunde con una categoría nativa ni con una colección. Los círculos de color de metadata son decorativos; el filtro de color usa opciones de variantes.
 
 Referencias: [colecciones en el panel](https://docs.medusajs.com/user-guide/products/collections), [productos por colección](https://docs.medusajs.com/resources/storefront-development/products/collections/products), [inventario](https://docs.medusajs.com/resources/storefront-development/products/inventory).
+
+## Proveedor local
+
+La versión estática de Pages usa `local-provider.ts` con el mismo contrato de páginas y facetas. Allí los filtros se ejecutan en el navegador sobre fixtures, identificados como demostración; nunca se mezclan con los resultados reales de Medusa. [Publicación y prueba](github-pages.md).

@@ -106,7 +106,7 @@ describe("catálogo Medusa", () => {
     ]);
     expect(mapped.image).toBe("");
     expect(mapped.images).toEqual([]);
-    expect(mapped.lookbook).toBeUndefined();
+    expect(mapped).not.toHaveProperty("lookbook");
     const [url, options] = fetchMock.mock.calls[0];
     expect(new URL(url).searchParams.get("region_id")).toBe("reg_colombia");
     expect(new URL(url).searchParams.get("fields")).toBe(
@@ -150,7 +150,7 @@ describe("catálogo Medusa", () => {
       available: true,
     });
     expect(updated.image).toBe("http://localhost:9000/static/foto.png");
-    expect(updated.lookbook).toBeUndefined();
+    expect(updated).not.toHaveProperty("lookbook");
   });
   it("usa la foto subida sin interpretar instrucciones antiguas de recorte", async () => {
     vi.stubGlobal(
@@ -170,7 +170,7 @@ describe("catálogo Medusa", () => {
     );
     const [mapped] = await createMedusaProvider(config).getProducts();
     expect(mapped.image).toBe(uploadedImage);
-    expect(mapped.lookbook).toBeUndefined();
+    expect(mapped).not.toHaveProperty("lookbook");
   });
   it("usa la primera foto de Medusa cuando el producto no tiene miniatura", async () => {
     vi.stubGlobal(
@@ -211,7 +211,7 @@ describe("catálogo Medusa", () => {
     const [mapped] = await createMedusaProvider(config).getProducts();
     expect(mapped.image).toBe(uploadedImage);
     expect(mapped.images).toEqual([uploadedImage, back, detail]);
-    expect(mapped.lookbook).toBeUndefined();
+    expect(mapped).not.toHaveProperty("lookbook");
   });
   it("no inventa precios o stock cuando faltan datos y respeta las políticas de inventario", async () => {
     vi.stubGlobal(

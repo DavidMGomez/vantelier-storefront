@@ -14,10 +14,17 @@ type Props = {
   facets: ReturnType<typeof catalogFacets>;
   filters: CatalogFilters;
   count: number;
+  loading?: boolean;
   onChange: (filters: CatalogFilters) => void;
 };
 
-export function CatalogControls({ facets, filters, count, onChange }: Props) {
+export function CatalogControls({
+  facets,
+  filters,
+  count,
+  loading,
+  onChange,
+}: Props) {
   const [expanded, setExpanded] = useState(false);
   const activeCount = activeFilterCount(filters);
   const patch = (value: Partial<CatalogFilters>) =>
@@ -47,6 +54,7 @@ export function CatalogControls({ facets, filters, count, onChange }: Props) {
           <span className="sr-only">Buscar prendas</span>
           <input
             type="search"
+            maxLength={100}
             value={filters.query}
             placeholder="Buscar una prenda"
             onChange={(event) => patch({ query: event.target.value })}
@@ -95,6 +103,22 @@ export function CatalogControls({ facets, filters, count, onChange }: Props) {
             </select>
           </label>
         )}
+        {facets.types.length > 0 && (
+          <label>
+            Tipo de prenda
+            <select
+              value={filters.typeId}
+              onChange={(event) => patch({ typeId: event.target.value })}
+            >
+              <option value="">Todos los tipos</option>
+              {facets.types.map((type) => (
+                <option key={type.id} value={type.id}>
+                  {type.value}
+                </option>
+              ))}
+            </select>
+          </label>
+        )}
         <label>
           Talla
           <select
@@ -135,7 +159,9 @@ export function CatalogControls({ facets, filters, count, onChange }: Props) {
       </div>
       <div className="catalog-results-bar">
         <span className="product-count" role="status">
-          {count} {count === 1 ? "diseño" : "diseños"}
+          {loading
+            ? "Actualizando catálogo…"
+            : `${count} ${count === 1 ? "diseño" : "diseños"}`}
           {filters.size && ` · Talla ${filters.size}`}
           {filters.color && ` · ${filters.color}`}
         </span>
@@ -157,6 +183,8 @@ export function CatalogControls({ facets, filters, count, onChange }: Props) {
             }
           >
             <option value="catalog">Catálogo</option>
+            <option value="newest">Más recientes</option>
+            <option value="oldest">Más antiguos</option>
             <option value="price-asc">Precio: menor a mayor</option>
             <option value="price-desc">Precio: mayor a menor</option>
             <option value="name">Nombre: A–Z</option>

@@ -1,16 +1,23 @@
+import { getCommerceProviderName } from "@/composition/storefront/provider";
 import {
-  getCommerceProvider,
-  getCommerceProviderName,
-} from "@/composition/storefront/provider";
+  getCatalogPage,
+  getCatalogFacets,
+} from "@/composition/storefront/catalog";
 import { StorefrontClient } from "@/composition/storefront/client";
+import { emptyFilters } from "@/features/commerce/domain/catalog-filters";
 import { connection } from "next/server";
 export default async function Home() {
-  // El catálogo comercial se consulta por petición; el build no necesita una API activa.
-  if (getCommerceProviderName() !== "demo") await connection();
-  const products = await getCommerceProvider().getProducts();
+  const isLocal = ["local", "demo"].includes(getCommerceProviderName());
+  if (!isLocal) await connection();
+  const [initialPage, facets] = await Promise.all([
+    getCatalogPage({ filters: emptyFilters, offset: 0, limit: 12 }),
+    getCatalogFacets(),
+  ]);
   return (
     <StorefrontClient
-      products={products}
+      simulated={isLocal}
+      initialPage={initialPage}
+      facets={facets}
       checkoutEnabled={getCommerceProviderName() === "shopify"}
     />
   );

@@ -11,10 +11,11 @@ export type Variant = {
 export type Product = {
   id: string;
   name: string;
+  type?: { id: string; value: string };
+  createdAt?: string;
   description: string;
   image: string;
   images?: string[];
-  lookbook?: { src: string; column: number };
   category: string;
   categories?: { id: string; name: string }[];
   collection?: { id: string; title: string; handle: string };

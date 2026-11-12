@@ -1,10 +1,8 @@
 /* eslint-disable @next/next/no-img-element */
 import { BrandSymbol } from "./brand-wordmark";
 import type { Product } from "../../domain/catalog";
-import type { CSSProperties } from "react";
 import { publicPath } from "@/shared/config/public-path";
 export function productImageCount(product: Product) {
-  if (product.lookbook) return 2;
   return product.images?.length || (product.image ? 1 : 0);
 }
 export function productImageLabel(index: number) {
@@ -19,9 +17,8 @@ export function ProductVisual({
   imageIndex?: number;
   eager?: boolean;
 }) {
-  const atlas = product.lookbook;
   const photos = product.images?.length ? product.images : [product.image];
-  const src = atlas?.src || photos[imageIndex] || photos[0];
+  const src = photos[imageIndex] || photos[0];
   if (!src)
     return (
       <span
@@ -33,19 +30,8 @@ export function ProductVisual({
         <span>Imagen pendiente</span>
       </span>
     );
-  const style = atlas
-    ? ({
-        "--lookbook-column": atlas.column,
-        "--lookbook-row": imageIndex === 1 ? 1 : 0,
-      } as CSSProperties)
-    : undefined;
   return (
-    <span
-      className={
-        atlas ? "product-visual product-visual--atlas" : "product-visual"
-      }
-      style={style}
-    >
+    <span className="product-visual">
       <img
         src={publicPath(src)}
         alt={
@@ -55,8 +41,8 @@ export function ProductVisual({
         }
         loading={eager ? "eager" : "lazy"}
         decoding="async"
-        width={atlas ? 1536 : 600}
-        height={atlas ? 1024 : 800}
+        width={600}
+        height={800}
       />
     </span>
   );

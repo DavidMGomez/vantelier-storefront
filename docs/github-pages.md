@@ -1,47 +1,41 @@
-# Publicación en GitHub Pages
+# Demostración estática en GitHub Pages
 
-GitHub Pages aloja una versión estática de Vantelier: catálogo de 16 diseños, filtros, vistas de frente y espalda, selección de tallas y bolsa. Los pagos permanecen desactivados. Medusa, inventario y pagos necesitan un backend desplegado por separado.
+El repositorio del frontend ya es público y conserva su configuración de Pages. Cada push a `main` ejecuta pruebas, exporta la tienda y publica `out/` mediante `.github/workflows/pages.yml`. No hay que cambiar visibilidad ni copiar credenciales de Medusa.
 
-## Configuración del repositorio
+## Dos proveedores, una interfaz
 
-1. Abre el repositorio del **frontend** en GitHub.
-2. En **Settings → General → Danger Zone → Change repository visibility**, selecciona **Public**.
-3. En **Settings → Pages → Build and deployment → Source**, selecciona **GitHub Actions**.
-4. Sube el código y `.github/workflows/pages.yml` a `main`.
-5. En **Actions → Deploy GitHub Pages**, comprueba que `build` y `deploy` terminen correctamente. El entorno `github-pages` muestra la URL publicada.
+| Modo     | Datos y filtros                                                    | Uso                                  |
+| -------- | ------------------------------------------------------------------ | ------------------------------------ |
+| `medusa` | API Medusa: catálogo, precios, stock, filtros y paginación remotos | Desarrollo y futura tienda comercial |
+| `local`  | Fixtures del frontend y respuestas con el mismo contrato           | Demostración sin backend             |
 
-Cada push a `main` vuelve a validar y desplegar la tienda. También se puede iniciar desde **Run workflow**. El workflow necesita `contents: read`, `pages: read` durante la compilación y `pages: write` e `id-token: write` durante la publicación. No requiere tokens personales ni secretos de comercio.
+`local-provider.ts` importa `src/features/commerce/infrastructure/data/catalog.json` y consulta sus productos en memoria: filtra, ordena y después pagina. Implementa `getProducts`, `getCatalog`, `getFacets` y un checkout bloqueado. Conserva los 16 diseños del catálogo estático anterior, sus textos, colores, tallas, disponibilidad de demostración y precios de referencia de $149.000 COP. La página muestra una franja que identifica la demostración.
 
-## Verificación local
+Cada producto tiene dos archivos individuales en `public/images/products/<id>/`: `frente.webp` y `espalda.webp`, recortados de las imágenes originales sin pérdida. El arreglo `images` del JSON define su orden. Para editar la demostración, modifica ese JSON y añade las fotos a `public/`; publica de nuevo. No necesita base de datos, scripts de preparación ni un servidor de imágenes.
+
+`GITHUB_PAGES=true` fuerza `local` tanto al compilar como al interactuar en el navegador. La paginación, el slider de precios, la búsqueda y los demás filtros funcionan **sin peticiones a `/api/catalog`, `/api/checkout` ni Medusa**. El build omite las rutas de servidor `.ts`. `demo` sigue aceptado como alias para instalaciones anteriores.
+
+## Probar sin Medusa
+
+En `.env.local`, establece `COMMERCE_PROVIDER=local` y ejecuta `npm run dev`. Vuelve a `medusa` para utilizar tus datos reales. Reinicia Next al cambiar de proveedor.
+
+Para exportar:
 
 ```sh
-npm ci
 npm run check
+npm run build:pages
+```
+
+Para simular el prefijo de este repositorio en macOS/Linux:
+
+```sh
 NEXT_PUBLIC_BASE_PATH=/vantelier-storefront npm run build:pages
 ```
 
-El resultado está en `out/`, listo para servir como archivos estáticos. El nombre de la ruta debe coincidir con el repositorio. En GitHub Actions se toma automáticamente de `actions/configure-pages`, por lo que también admite un dominio propio sin prefijo.
+En Actions, `actions/configure-pages` proporciona el prefijo real; también admite un dominio propio. El resultado es un sitio estático en `out/`, con `.nojekyll`. `publicPath` resuelve imágenes locales con ese prefijo y conserva las URLs externas.
 
-Para un dominio en la raíz:
+## Límites de la demostración
 
-```sh
-NEXT_PUBLIC_BASE_PATH= npm run build:pages
-```
+La bolsa se mantiene en memoria y se reinicia al recargar. No reserva stock, crea pedidos, sincroniza inventario ni permite cobros. GitHub Pages no ejecuta Medusa: la tienda comercial necesita alojamiento independiente para el backend y un despliegue Node de este frontend.
 
-## Decisiones de implementación
-
-- `GITHUB_PAGES=true` activa `output: export` y selecciona exclusivamente las rutas de interfaz `.tsx`. El handler `.ts` de `/api/checkout` se conserva para los despliegues Node.js y no se exporta a Pages.
-- La exportación siempre usa el catálogo demo local, incluso si el entorno tiene otro proveedor configurado.
-- `publicPath` agrega el prefijo a imágenes y endpoints locales. Los enlaces `next/link` y los recursos de Next.js usan `basePath`.
-- `build:pages` crea `.nojekyll` y publica únicamente `out/`; no publica código de servidor ni archivos de entorno.
-- La bolsa no reserva inventario y se reinicia al recargar. El botón de pago está deshabilitado en esta muestra.
-
-## Despliegue con servidor
-
-`npm run build` y `npm start` mantienen el modo Next.js con el endpoint de checkout. No establezcas `GITHUB_PAGES=true` en ese despliegue. El adaptador de Shopify existente y la futura integración de Medusa son independientes de la publicación estática.
-
-## Referencias
-
-- [Exportación estática de Next.js](https://nextjs.org/docs/app/guides/static-exports)
-- [Workflows de GitHub Pages](https://docs.github.com/en/pages/getting-started-with-github-pages/using-custom-workflows-with-github-pages)
-- [Prefijos de ruta en Next.js](https://nextjs.org/docs/app/api-reference/config/next-config-js/basePath)
+Referencias: [Next.js static export](https://nextjs.org/docs/app/guides/static-exports), [GitHub Pages con Actions](https://docs.github.com/en/pages/getting-started-with-github-pages/using-custom-workflows-with-github-pages).
