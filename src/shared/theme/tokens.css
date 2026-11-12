@@ -1,0 +1,10 @@
+:root {
+  --paper: #f5f4ef;
+  --canvas: #eae9e3;
+  --ink: #10100f;
+  --muted: #61615b;
+  --line: #dcdcd4;
+  --accent: #be2824;
+  --blue: #252e99;
+  --gutter: clamp(20px, 4vw, 72px);
+}
