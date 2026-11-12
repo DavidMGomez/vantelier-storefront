@@ -13,6 +13,7 @@ export default defineConfig([
     "out/**",
     "tmp/**",
     ".impeccable/**",
+    ".agents/**",
     "next-env.d.ts",
   ]),
   {

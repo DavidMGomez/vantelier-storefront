@@ -8,3 +8,7 @@ out/
 *.tsbuildinfo
 .DS_Store
 coverage/
+
+# Impeccable: motor local descargable; las instrucciones sí se versionan.
+.agents/skills/impeccable/scripts/bin/
+.impeccable/
