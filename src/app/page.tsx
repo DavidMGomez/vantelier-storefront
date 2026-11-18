@@ -19,6 +19,7 @@ export default async function Home() {
       initialPage={initialPage}
       facets={facets}
       checkoutEnabled={getCommerceProviderName() === "shopify"}
+      addressStepEnabled={getCommerceProviderName() === "medusa"}
     />
   );
 }
