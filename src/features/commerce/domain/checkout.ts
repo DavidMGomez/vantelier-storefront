@@ -25,6 +25,11 @@ export type CheckoutSummary = {
 
 export type PaymentMethod = { id: string; label: string };
 
+/** Cómo continúa el pago en el navegador: ir a una URL o abrir el checkout de ePayco. */
+export type PaymentAction =
+  | { type: "redirect"; url: string }
+  | { type: "epayco"; sessionId: string; test: boolean };
+
 /** Estado del pago según el backend; "paid" solo cuando el pedido ya existe. */
 export type PaymentStatus = "paid" | "pending" | "failed";
 

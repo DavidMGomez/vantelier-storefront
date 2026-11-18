@@ -1,5 +1,6 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { createMedusaCheckout } from "../src/features/commerce/infrastructure/medusa-checkout";
+import { runPaymentAction } from "../src/features/commerce/infrastructure/browser-checkout";
 import { POST as startPayment } from "../src/app/api/checkout/payment/route";
 import { GET as paymentStatus } from "../src/app/api/checkout/status/route";
 
@@ -42,7 +43,8 @@ describe("inicio del pago", () => {
         "pp_wompi_wompi",
       ),
     ).toEqual({
-      redirectUrl: checkoutUrl,
+      type: "redirect",
+      url: checkoutUrl,
     });
     expect(fetchMock.mock.calls[1][0]).toBe(
       "http://127.0.0.1:9000/store/payment-collections",
@@ -131,7 +133,7 @@ describe("inicio del pago", () => {
         "cart_1",
         "pp_mercadopago_mercadopago",
       ),
-    ).toEqual({ redirectUrl: mp });
+    ).toEqual({ type: "redirect", url: mp });
     expect(JSON.parse(fetchMock.mock.calls[1][1].body)).toEqual({
       provider_id: "pp_mercadopago_mercadopago",
     });
@@ -143,6 +145,49 @@ describe("inicio del pago", () => {
         "pp_mercadopago_mercadopago",
       ),
     ).rejects.toThrow("pago");
+  });
+  it("ePayco devuelve una acción de script con el id de sesión, nunca una URL", async () => {
+    const flow = (data: object) =>
+      vi
+        .fn()
+        .mockResolvedValueOnce(
+          Response.json({
+            cart: { id: "cart_1", payment_collection: { id: "paycol_1" } },
+          }),
+        )
+        .mockResolvedValueOnce(
+          Response.json({
+            payment_collection: {
+              payment_sessions: [
+                session({ provider_id: "pp_epayco_epayco", data }),
+              ],
+            },
+          }),
+        );
+    vi.stubGlobal(
+      "fetch",
+      flow({ epayco_session_id: "68eefce71d65f1d39c0f6dad", test: true }),
+    );
+    expect(
+      await createMedusaCheckout(config).startPayment(
+        "cart_1",
+        "pp_epayco_epayco",
+      ),
+    ).toEqual({
+      type: "epayco",
+      sessionId: "68eefce71d65f1d39c0f6dad",
+      test: true,
+    });
+    for (const bad of [
+      {},
+      { epayco_session_id: "<script>" },
+      { epayco_session_id: "abc", test: "yes" },
+    ]) {
+      vi.stubGlobal("fetch", flow(bad));
+      await expect(
+        createMedusaCheckout(config).startPayment("cart_1", "pp_epayco_epayco"),
+      ).rejects.toThrow("pago");
+    }
   });
   it("rechaza medios de pago no integrados sin contactar a Medusa", async () => {
     const fetchMock = vi.fn();
@@ -275,7 +320,10 @@ describe("rutas de pago", () => {
     );
     const response = await post({ cartId: "cart_1" });
     expect(response.status).toBe(200);
-    expect(await response.json()).toEqual({ redirectUrl: checkoutUrl });
+    expect(await response.json()).toEqual({
+      type: "redirect",
+      url: checkoutUrl,
+    });
   });
   it("consulta el estado sin aceptar ids inválidos", async () => {
     medusaEnv();
@@ -299,5 +347,40 @@ describe("rutas de pago", () => {
         )
       ).status,
     ).toBe(400);
+  });
+});
+
+describe("acción de pago en el navegador", () => {
+  const browser = () => ({
+    assign: vi.fn(),
+    openEpayco: vi.fn(async () => {}),
+  });
+  it("redirige solo a URLs HTTPS", async () => {
+    const b = browser();
+    await runPaymentAction({ type: "redirect", url: checkoutUrl }, b);
+    expect(b.assign).toHaveBeenCalledWith(checkoutUrl);
+    for (const url of ["http://checkout.wompi.co/p/", "javascript:alert(1)"])
+      await expect(
+        runPaymentAction({ type: "redirect", url }, browser()),
+      ).rejects.toThrow();
+  });
+  it("abre ePayco con el id de sesión y el modo de prueba", async () => {
+    const b = browser();
+    await runPaymentAction(
+      { type: "epayco", sessionId: "abc123", test: true },
+      b,
+    );
+    expect(b.openEpayco).toHaveBeenCalledWith("abc123", true);
+    expect(b.assign).not.toHaveBeenCalled();
+  });
+  it("rechaza acciones desconocidas o mal formadas", async () => {
+    for (const action of [
+      null,
+      {},
+      { type: "epayco", sessionId: "<x>", test: true },
+      { type: "epayco", sessionId: "abc" },
+      { type: "eval", code: "1" },
+    ])
+      await expect(runPaymentAction(action, browser())).rejects.toThrow("pago");
   });
 });
