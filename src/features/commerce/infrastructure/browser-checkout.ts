@@ -1,13 +1,40 @@
 import type { CartLine } from "../domain/catalog";
 import type {
   CheckoutSummary,
+  PaymentAction,
   PaymentStatus,
   ShippingAddress,
 } from "../domain/checkout";
 import { publicPath } from "@/shared/config/public-path";
+import { openEpaycoCheckout } from "./epayco-checkout";
 
 // Solo se guarda el id del carrito para consultar el resultado al volver de la pasarela.
 const PENDING_CART_KEY = "vantelier:checkout-cart";
+
+/** Valida la acción recibida del servidor y la ejecuta (redirigir o abrir ePayco). */
+export async function runPaymentAction(
+  action: unknown,
+  browser: {
+    assign: (url: string) => void;
+    openEpayco: (sessionId: string, test: boolean) => Promise<void>;
+  },
+): Promise<void> {
+  const a = action as Partial<PaymentAction> | null;
+  if (a?.type === "redirect" && typeof a.url === "string") {
+    const url = new URL(a.url);
+    if (url.protocol !== "https:")
+      throw new Error("No pudimos iniciar el pago.");
+    return browser.assign(url.toString());
+  }
+  if (
+    a?.type === "epayco" &&
+    typeof a.sessionId === "string" &&
+    /^[A-Za-z0-9_-]{1,64}$/.test(a.sessionId) &&
+    typeof a.test === "boolean"
+  )
+    return browser.openEpayco(a.sessionId, a.test);
+  throw new Error("No pudimos iniciar el pago.");
+}
 
 /** Abre la sesión de pago y envía al comprador al checkout de la pasarela. */
 export async function payCheckout(
@@ -20,10 +47,13 @@ export async function payCheckout(
     body: JSON.stringify({ cartId, providerId }),
   });
   const result = await response.json().catch(() => ({}));
-  if (!response.ok || typeof result.redirectUrl !== "string")
+  if (!response.ok)
     throw new Error(result.error || "No pudimos iniciar el pago.");
   localStorage.setItem(PENDING_CART_KEY, cartId);
-  window.location.assign(result.redirectUrl);
+  await runPaymentAction(result, {
+    assign: (url) => window.location.assign(url),
+    openEpayco: openEpaycoCheckout,
+  });
 }
 
 /** Estado según el backend; null si este navegador no tiene una compra en curso. */

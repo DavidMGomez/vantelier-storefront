@@ -65,7 +65,7 @@ El resultado está en `out/`. Cada push a `main` publica mediante Actions. [Conf
 
 ## 🚧 Estado
 
-Catálogo, filtros, variantes, galería y bolsa disponibles. Con Medusa, «Continuar con tus datos» pide correo y dirección de envío en Colombia, crea el carrito en Medusa con el envío incluido y muestra el total calculado por el backend (precios con IVA incluido). El comprador elige **Wompi** o **Mercado Pago** (los que el backend tenga habilitados) y paga en su checkout; al volver, `/checkout/resultado` muestra solo lo que confirma el backend (el pedido se crea cuando llega el webhook verificado de Wompi). Pendientes: ePayco y cuentas de clientes.
+Catálogo, filtros, variantes, galería y bolsa disponibles. Con Medusa, «Continuar con tus datos» pide correo y dirección de envío en Colombia, crea el carrito en Medusa con el envío incluido y muestra el total calculado por el backend (precios con IVA incluido). El comprador elige **Wompi**, **Mercado Pago** o **ePayco** (los que el backend tenga habilitados) y paga en su checkout; al volver, `/checkout/resultado` muestra solo lo que confirma el backend (el pedido se crea cuando llega el webhook verificado de Wompi). Pendiente: cuentas de clientes.
 
 ## 📚 Docs
 

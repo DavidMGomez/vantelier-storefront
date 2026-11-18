@@ -1,6 +1,7 @@
 import type { CheckoutGateway } from "../application/ports/checkout-gateway";
 import type {
   CheckoutSummary,
+  PaymentAction,
   PaymentMethod,
   PaymentStatus,
 } from "../domain/checkout";
@@ -18,7 +19,11 @@ type MedusaShippingOption = { id?: string; name?: string; amount?: unknown };
 type MedusaPaymentSession = {
   provider_id?: string;
   status?: string;
-  data?: { checkout_url?: unknown };
+  data?: {
+    checkout_url?: unknown;
+    epayco_session_id?: unknown;
+    test?: unknown;
+  };
 };
 type MedusaPaymentCollection = {
   id?: string;
@@ -26,13 +31,24 @@ type MedusaPaymentCollection = {
 };
 
 // Medios integrados, en el orden en que se ofrecen. Cada uno solo redirige a su checkout oficial.
-const PAYMENT_METHODS: (PaymentMethod & { hosts: string[] })[] = [
-  { id: "pp_wompi_wompi", label: "Wompi", hosts: ["checkout.wompi.co"] },
+// ePayco no redirige por URL: se abre su script con el id de sesión (hosts vacío).
+const PAYMENT_METHODS: (PaymentMethod & {
+  kind: "redirect" | "epayco";
+  hosts: string[];
+})[] = [
+  {
+    id: "pp_wompi_wompi",
+    label: "Wompi",
+    kind: "redirect",
+    hosts: ["checkout.wompi.co"],
+  },
   {
     id: "pp_mercadopago_mercadopago",
     label: "Mercado Pago",
+    kind: "redirect",
     hosts: ["www.mercadopago.com.co", "sandbox.mercadopago.com.co"],
   },
+  { id: "pp_epayco_epayco", label: "ePayco", kind: "epayco", hosts: [] },
 ];
 const knownMethod = (id: string) => PAYMENT_METHODS.find((m) => m.id === id);
 
@@ -187,8 +203,10 @@ export function createMedusaCheckout(config: MedusaConfig): CheckoutGateway {
       const session = collection?.payment_sessions?.find(
         (s) => s.provider_id === method.id,
       );
+      if (method.kind === "epayco") return epaycoAction(session?.data);
       return {
-        redirectUrl: checkoutUrl(session?.data?.checkout_url, method.hosts),
+        type: "redirect",
+        url: checkoutUrl(session?.data?.checkout_url, method.hosts),
       };
     },
 
@@ -206,6 +224,17 @@ export function createMedusaCheckout(config: MedusaConfig): CheckoutGateway {
       return status((await response.json()).cart);
     },
   };
+}
+
+function epaycoAction(data: MedusaPaymentSession["data"]): PaymentAction {
+  const sessionId = data?.epayco_session_id;
+  if (
+    typeof sessionId !== "string" ||
+    !/^[A-Za-z0-9_-]{1,64}$/.test(sessionId) ||
+    typeof data?.test !== "boolean"
+  )
+    throw new CheckoutError("No pudimos iniciar el pago. Intenta de nuevo.");
+  return { type: "epayco", sessionId, test: data.test };
 }
 
 /** Solo se redirige al checkout oficial del proveedor, por HTTPS. */

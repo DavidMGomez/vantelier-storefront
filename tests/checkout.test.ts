@@ -56,6 +56,7 @@ function medusaFlow(
           { id: "pp_system_default" },
           { id: "pp_mercadopago_mercadopago" },
           { id: "pp_wompi_wompi" },
+          { id: "pp_epayco_epayco" },
         ],
       }),
     );
@@ -111,6 +112,7 @@ describe("checkout Medusa", () => {
       paymentMethods: [
         { id: "pp_wompi_wompi", label: "Wompi" },
         { id: "pp_mercadopago_mercadopago", label: "Mercado Pago" },
+        { id: "pp_epayco_epayco", label: "ePayco" },
       ],
     });
     expect(fetchMock.mock.calls[3][0]).toBe(
