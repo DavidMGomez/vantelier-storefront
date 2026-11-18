@@ -7,6 +7,7 @@ import {
 } from "../domain/catalog-filters";
 import type { CommerceProvider } from "../application/ports/commerce-provider";
 import type { Product, Variant } from "../domain/catalog";
+import { medusaBaseUrl, type MedusaConfig } from "./medusa-config";
 
 type MedusaVariant = {
   id: string;
@@ -39,34 +40,10 @@ type MedusaProduct = {
   }[];
   options?: { id: string; title: string }[];
 };
-type Config = { backendUrl: string; publishableKey: string; regionId: string };
-
 export function createMedusaProvider(
-  config: Config,
+  config: MedusaConfig,
 ): CommerceProvider & CatalogReader {
-  let backend: URL;
-  try {
-    backend = new URL(config.backendUrl);
-  } catch {
-    throw new Error("Configura MEDUSA_BACKEND_URL en .env.local.");
-  }
-  if (
-    !["http:", "https:"].includes(backend.protocol) ||
-    backend.username ||
-    backend.password ||
-    backend.search ||
-    backend.hash
-  )
-    throw new Error(
-      "MEDUSA_BACKEND_URL debe ser HTTP(S), sin credenciales ni parámetros.",
-    );
-  if (!config.publishableKey.startsWith("pk_"))
-    throw new Error(
-      "Configura MEDUSA_PUBLISHABLE_KEY con la clave pública de Vantelier Storefront.",
-    );
-  if (!config.regionId.startsWith("reg_"))
-    throw new Error("Configura MEDUSA_REGION_ID con la región Colombia.");
-  const base = backend.toString().replace(/\/+$/, "");
+  const base = medusaBaseUrl(config);
 
   async function readCatalog(path: string, params: URLSearchParams) {
     params.set("region_id", config.regionId);

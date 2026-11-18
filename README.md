@@ -65,7 +65,7 @@ El resultado está en `out/`. Cada push a `main` publica mediante Actions. [Conf
 
 ## 🚧 Estado
 
-Catálogo, filtros, variantes, galería y bolsa local disponibles. **La bolsa no reserva stock ni crea pedidos; los cobros están bloqueados.** Pendientes: cuentas de clientes, carrito Medusa, checkout, pagos, envíos e impuestos.
+Catálogo, filtros, variantes, galería y bolsa disponibles. Con Medusa, «Continuar con tus datos» pide correo y dirección de envío en Colombia, crea el carrito en Medusa con el envío incluido y muestra el total calculado por el backend (precios con IVA incluido). **Todavía no se cobra ni se crean pedidos.** Pendientes: pasarelas de pago (Wompi, Mercado Pago y ePayco), confirmación del pedido y cuentas de clientes.
 
 ## 📚 Docs
 

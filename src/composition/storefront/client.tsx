@@ -1,6 +1,9 @@
 "use client";
 import { Storefront } from "@/features/commerce/presentation/components/storefront";
-import { beginCheckout } from "@/features/commerce/infrastructure/browser-checkout";
+import {
+  beginCheckout,
+  prepareCheckout,
+} from "@/features/commerce/infrastructure/browser-checkout";
 import { loadCatalog } from "@/features/commerce/infrastructure/browser-catalog";
 import type {
   CatalogPage,
@@ -11,11 +14,13 @@ export function StorefrontClient({
   initialPage,
   facets,
   checkoutEnabled,
+  addressStepEnabled = false,
 }: {
   simulated: boolean;
   initialPage: CatalogPage;
   facets: CatalogFacets;
   checkoutEnabled: boolean;
+  addressStepEnabled?: boolean;
 }) {
   return (
     <Storefront
@@ -25,6 +30,7 @@ export function StorefrontClient({
       loadCatalog={loadCatalog}
       checkout={beginCheckout}
       checkoutEnabled={checkoutEnabled}
+      prepareCheckout={addressStepEnabled ? prepareCheckout : undefined}
     />
   );
 }

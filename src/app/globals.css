@@ -726,6 +726,66 @@ legend {
   justify-content: space-between;
   margin-top: 25px;
 }
+.checkout-form,
+.checkout-summary {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+.checkout-back {
+  align-self: flex-start;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-left: 0;
+}
+.checkout-fields {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px 16px;
+}
+.checkout-fields label {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  font-size: 12px;
+}
+.checkout-fields label.wide {
+  grid-column: 1 / -1;
+}
+.checkout-fields input {
+  width: 100%;
+  min-width: 0;
+  min-height: 44px;
+  padding: 10px 12px;
+  border: 1px solid var(--line);
+  border-radius: 0;
+  color: var(--ink);
+  background: transparent;
+  font: inherit;
+  font-size: 16px;
+}
+.checkout-summary dl {
+  margin: 0;
+}
+.checkout-summary dl div {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--line);
+}
+.checkout-summary dd {
+  margin: 0;
+}
+.checkout-summary-total {
+  font-weight: 700;
+}
+@media (max-width: 480px) {
+  .checkout-fields {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
 .demo-note,
 .error {
   padding: 16px;

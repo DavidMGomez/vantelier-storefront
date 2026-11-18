@@ -20,6 +20,7 @@ import { ProductVisual } from "./product-visual";
 import type { CartLine, Product } from "../../domain/catalog";
 import { availabilityLabel, formatMoney } from "../../domain/catalog";
 import { Modal } from "@/shared/ui/modal";
+import { CheckoutForm, type PrepareCheckout } from "./checkout-form";
 export function Storefront({
   simulated = false,
   initialPage,
@@ -27,6 +28,7 @@ export function Storefront({
   loadCatalog,
   checkout,
   checkoutEnabled,
+  prepareCheckout,
 }: {
   simulated?: boolean;
   initialPage: CatalogPage;
@@ -34,6 +36,8 @@ export function Storefront({
   loadCatalog: CatalogLoader;
   checkout: (lines: CartLine[]) => Promise<string>;
   checkoutEnabled: boolean;
+  /** Paso de datos de envío y total calculado por el backend (Medusa). */
+  prepareCheckout?: PrepareCheckout;
 }) {
   const [filters, setFilters] = useState(emptyFilters);
   const [pageFilters, setPageFilters] = useState(emptyFilters);
@@ -110,6 +114,7 @@ export function Storefront({
   const [variantId, setVariantId] = useState("");
   const [cart, setCart] = useState<CartLine[]>([]);
   const [cartOpen, setCartOpen] = useState(false);
+  const [checkoutStep, setCheckoutStep] = useState(false);
   const [about, setAbout] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
@@ -440,8 +445,20 @@ export function Storefront({
         </Modal>
       )}
       {cartOpen && (
-        <Modal title="Tu bolsa" onClose={() => setCartOpen(false)}>
-          {items.length ? (
+        <Modal
+          title={checkoutStep ? "Datos de envío" : "Tu bolsa"}
+          onClose={() => {
+            setCartOpen(false);
+            setCheckoutStep(false);
+          }}
+        >
+          {checkoutStep && prepareCheckout && items.length ? (
+            <CheckoutForm
+              lines={cart}
+              prepare={prepareCheckout}
+              onBack={() => setCheckoutStep(false)}
+            />
+          ) : items.length ? (
             <>
               <div className="cart-items">
                 {items.map((line) => (
@@ -499,22 +516,37 @@ export function Storefront({
               <p className="detail-note">
                 {checkoutEnabled
                   ? "Envío e impuestos calculados al finalizar. La disponibilidad se confirma en checkout."
-                  : "La bolsa no reserva existencias. Envíos e impuestos pendientes de configuración."}
+                  : prepareCheckout
+                    ? "Precios con IVA y envío a toda Colombia incluidos. La disponibilidad se confirma al continuar."
+                    : "La bolsa no reserva existencias. Envíos e impuestos pendientes de configuración."}
               </p>
-              {!checkoutEnabled && (
+              {!checkoutEnabled && !prepareCheckout && (
                 <p className="demo-note">
                   Estamos preparando la tienda. Los pagos todavía no están
                   habilitados.
                 </p>
               )}
-              <button
-                className="button full"
-                disabled={busy || !checkoutEnabled}
-                onClick={pay}
-              >
-                {busy ? "Abriendo checkout…" : "Continuar al pago"}
-                <ArrowRight size={18} aria-hidden="true" />
-              </button>
+              {!checkoutEnabled && prepareCheckout ? (
+                <button
+                  className="button full"
+                  onClick={() => {
+                    setError("");
+                    setCheckoutStep(true);
+                  }}
+                >
+                  Continuar con tus datos
+                  <ArrowRight size={18} aria-hidden="true" />
+                </button>
+              ) : (
+                <button
+                  className="button full"
+                  disabled={busy || !checkoutEnabled}
+                  onClick={pay}
+                >
+                  {busy ? "Abriendo checkout…" : "Continuar al pago"}
+                  <ArrowRight size={18} aria-hidden="true" />
+                </button>
+              )}
               {error && (
                 <p role="alert" className="error">
                   {error}
