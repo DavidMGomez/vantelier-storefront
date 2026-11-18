@@ -2,6 +2,7 @@
 import { Storefront } from "@/features/commerce/presentation/components/storefront";
 import {
   beginCheckout,
+  payCheckout,
   prepareCheckout,
 } from "@/features/commerce/infrastructure/browser-checkout";
 import { loadCatalog } from "@/features/commerce/infrastructure/browser-catalog";
@@ -31,6 +32,7 @@ export function StorefrontClient({
       checkout={beginCheckout}
       checkoutEnabled={checkoutEnabled}
       prepareCheckout={addressStepEnabled ? prepareCheckout : undefined}
+      payCheckout={addressStepEnabled ? payCheckout : undefined}
     />
   );
 }
