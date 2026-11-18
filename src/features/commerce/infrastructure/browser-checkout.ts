@@ -10,11 +10,14 @@ import { publicPath } from "@/shared/config/public-path";
 const PENDING_CART_KEY = "vantelier:checkout-cart";
 
 /** Abre la sesión de pago y envía al comprador al checkout de la pasarela. */
-export async function payCheckout(cartId: string): Promise<void> {
+export async function payCheckout(
+  cartId: string,
+  providerId: string,
+): Promise<void> {
   const response = await fetch(publicPath("/api/checkout/payment"), {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ cartId }),
+    body: JSON.stringify({ cartId, providerId }),
   });
   const result = await response.json().catch(() => ({}));
   if (!response.ok || typeof result.redirectUrl !== "string")

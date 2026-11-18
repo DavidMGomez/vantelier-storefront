@@ -13,7 +13,10 @@ export type PrepareCheckout = (
   lines: CartLine[],
   address: ShippingAddress,
 ) => Promise<CheckoutSummary>;
-export type PayCheckout = (cartId: string) => Promise<void>;
+export type PayCheckout = (
+  cartId: string,
+  paymentMethodId: string,
+) => Promise<void>;
 
 const fields: {
   name: keyof ShippingAddress;
@@ -82,12 +85,12 @@ export function CheckoutForm({
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
 
-  async function startPayment(cartId: string) {
+  async function startPayment(cartId: string, paymentMethodId: string) {
     if (!pay) return;
     setError("");
     setBusy(true);
     try {
-      await pay(cartId);
+      await pay(cartId, paymentMethodId);
     } catch (e) {
       setError(e instanceof Error ? e.message : "Intenta de nuevo.");
       setBusy(false);
@@ -116,66 +119,15 @@ export function CheckoutForm({
 
   if (summary)
     return (
-      <div className="checkout-summary">
-        <dl>
-          <div>
-            <dt>Productos</dt>
-            <dd>{formatMoney(summary.itemTotal, summary.currency)}</dd>
-          </div>
-          <div>
-            <dt>{summary.shippingLabel}</dt>
-            <dd>
-              {summary.shippingTotal
-                ? formatMoney(summary.shippingTotal, summary.currency)
-                : "Incluido"}
-            </dd>
-          </div>
-          <div className="checkout-summary-total">
-            <dt>Total</dt>
-            <dd>{formatMoney(summary.total, summary.currency)}</dd>
-          </div>
-        </dl>
-        <p className="detail-note">
-          Precios con IVA incluido
-          {summary.taxTotal
-            ? ` (${formatMoney(summary.taxTotal, summary.currency)})`
-            : ""}
-          . Envío a {address.city.trim()}, {address.province.trim()}.
-        </p>
-        {pay ? (
-          <p className="detail-note">
-            Pagarás en Wompi con tarjeta, PSE, Nequi u otros medios. Tu pedido
-            se confirma cuando Wompi nos notifica el pago.
-          </p>
-        ) : (
-          <p className="demo-note">
-            Los pagos aún no están habilitados. Todavía no se realiza ningún
-            cobro.
-          </p>
-        )}
-        <button
-          className="button full"
-          disabled={!pay || busy}
-          onClick={() => startPayment(summary.cartId)}
-        >
-          {busy
-            ? "Abriendo Wompi…"
-            : `Pagar ${formatMoney(summary.total, summary.currency)}`}
-          <ArrowRight size={18} aria-hidden="true" />
-        </button>
-        {error && (
-          <p role="alert" className="error">
-            {error}
-          </p>
-        )}
-        <button
-          className="remove"
-          disabled={busy}
-          onClick={() => setSummary(null)}
-        >
-          Editar datos de envío
-        </button>
-      </div>
+      <CheckoutSummaryView
+        summary={summary}
+        destination={`${address.city.trim()}, ${address.province.trim()}`}
+        canPay={Boolean(pay)}
+        busy={busy}
+        error={error}
+        onPay={(methodId) => startPayment(summary.cartId, methodId)}
+        onEdit={() => setSummary(null)}
+      />
     );
 
   return (
@@ -214,5 +166,101 @@ export function CheckoutForm({
         </p>
       )}
     </form>
+  );
+}
+
+/** Resumen con totales del backend y elección del medio de pago. */
+export function CheckoutSummaryView({
+  summary,
+  destination,
+  canPay,
+  busy,
+  error,
+  onPay,
+  onEdit,
+}: {
+  summary: CheckoutSummary;
+  destination: string;
+  canPay: boolean;
+  busy: boolean;
+  error: string;
+  onPay: (paymentMethodId: string) => void;
+  onEdit: () => void;
+}) {
+  const methods = canPay ? summary.paymentMethods : [];
+  const [selected, setSelected] = useState(methods[0]?.id ?? "");
+  const method = methods.find((m) => m.id === selected);
+  return (
+    <div className="checkout-summary">
+      <dl>
+        <div>
+          <dt>Productos</dt>
+          <dd>{formatMoney(summary.itemTotal, summary.currency)}</dd>
+        </div>
+        <div>
+          <dt>{summary.shippingLabel}</dt>
+          <dd>
+            {summary.shippingTotal
+              ? formatMoney(summary.shippingTotal, summary.currency)
+              : "Incluido"}
+          </dd>
+        </div>
+        <div className="checkout-summary-total">
+          <dt>Total</dt>
+          <dd>{formatMoney(summary.total, summary.currency)}</dd>
+        </div>
+      </dl>
+      <p className="detail-note">
+        Precios con IVA incluido
+        {summary.taxTotal
+          ? ` (${formatMoney(summary.taxTotal, summary.currency)})`
+          : ""}
+        . Envío a {destination}.
+      </p>
+      {methods.length ? (
+        <fieldset className="checkout-methods" disabled={busy}>
+          <legend>Medio de pago</legend>
+          {methods.map((m) => (
+            <label key={m.id}>
+              <input
+                type="radio"
+                name="payment-method"
+                value={m.id}
+                checked={selected === m.id}
+                onChange={() => setSelected(m.id)}
+              />
+              {m.label}
+            </label>
+          ))}
+          <p className="detail-note">
+            Pagas en la página segura del medio elegido. Tu pedido se confirma
+            cuando nos notifica el pago.
+          </p>
+        </fieldset>
+      ) : (
+        <p className="demo-note">
+          Los pagos aún no están habilitados. Todavía no se realiza ningún
+          cobro.
+        </p>
+      )}
+      <button
+        className="button full"
+        disabled={!method || busy}
+        onClick={() => method && onPay(method.id)}
+      >
+        {busy
+          ? `Abriendo ${method?.label ?? "el pago"}…`
+          : `Pagar ${formatMoney(summary.total, summary.currency)}`}
+        <ArrowRight size={18} aria-hidden="true" />
+      </button>
+      {error && (
+        <p role="alert" className="error">
+          {error}
+        </p>
+      )}
+      <button className="remove" disabled={busy} onClick={onEdit}>
+        Editar datos de envío
+      </button>
+    </div>
   );
 }

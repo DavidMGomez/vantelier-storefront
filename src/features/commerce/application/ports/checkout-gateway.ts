@@ -11,7 +11,10 @@ export interface CheckoutGateway {
     address: ShippingAddress,
   ): Promise<CheckoutSummary>;
   /** Abre la sesión de pago del carrito y devuelve a dónde enviar al comprador. */
-  startPayment(cartId: string): Promise<{ redirectUrl: string }>;
+  startPayment(
+    cartId: string,
+    paymentMethodId: string,
+  ): Promise<{ redirectUrl: string }>;
   /** Estado confirmado por el backend (webhook del proveedor), nunca por el retorno del navegador. */
   paymentStatus(cartId: string): Promise<PaymentStatus>;
 }

@@ -19,10 +19,25 @@ export type CheckoutSummary = {
   taxTotal: number;
   total: number;
   shippingLabel: string;
+  /** Medios de pago habilitados en el backend para la región (puede estar vacío). */
+  paymentMethods: PaymentMethod[];
 };
+
+export type PaymentMethod = { id: string; label: string };
 
 /** Estado del pago según el backend; "paid" solo cuando el pedido ya existe. */
 export type PaymentStatus = "paid" | "pending" | "failed";
+
+const PAYMENT_METHOD_ID = /^pp_[a-z0-9]+(?:_[a-z0-9]+)*$/;
+export function validatePaymentMethodId(value: unknown): string {
+  if (
+    typeof value !== "string" ||
+    value.length > 64 ||
+    !PAYMENT_METHOD_ID.test(value)
+  )
+    throw new Error("Elige un medio de pago.");
+  return value;
+}
 
 const CART_ID = /^cart_[A-Za-z0-9]{1,64}$/;
 export function validateCartId(value: unknown): string {

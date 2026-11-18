@@ -1,5 +1,8 @@
 import { getCheckoutGateway } from "@/composition/storefront/checkout";
-import { validateCartId } from "@/features/commerce/domain/checkout";
+import {
+  validateCartId,
+  validatePaymentMethodId,
+} from "@/features/commerce/domain/checkout";
 import { CheckoutError } from "@/features/commerce/infrastructure/medusa-checkout";
 
 const unavailable = () =>
@@ -16,13 +19,16 @@ export async function POST(request: Request) {
   if (origin && origin !== new URL(request.url).origin)
     return Response.json({ error: "Origen no permitido." }, { status: 403 });
   let cartId: string;
+  let paymentMethodId: string;
   try {
     const body = await request.text();
     if (body.length > 1000) throw new Error();
-    cartId = validateCartId(JSON.parse(body)?.cartId);
+    const parsed = JSON.parse(body);
+    cartId = validateCartId(parsed?.cartId);
+    paymentMethodId = validatePaymentMethodId(parsed?.providerId);
   } catch {
     return Response.json(
-      { error: "Revisa la compra que intentas pagar." },
+      { error: "Revisa la compra y el medio de pago." },
       { status: 400 },
     );
   }
@@ -34,7 +40,7 @@ export async function POST(request: Request) {
   }
   if (!gateway) return unavailable();
   try {
-    return Response.json(await gateway.startPayment(cartId), {
+    return Response.json(await gateway.startPayment(cartId, paymentMethodId), {
       headers: { "Cache-Control": "no-store" },
     });
   } catch (error) {
