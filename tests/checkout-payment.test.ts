@@ -36,7 +36,12 @@ describe("inicio del pago", () => {
         }),
       );
     vi.stubGlobal("fetch", fetchMock);
-    expect(await createMedusaCheckout(config).startPayment("cart_1")).toEqual({
+    expect(
+      await createMedusaCheckout(config).startPayment(
+        "cart_1",
+        "pp_wompi_wompi",
+      ),
+    ).toEqual({
       redirectUrl: checkoutUrl,
     });
     expect(fetchMock.mock.calls[1][0]).toBe(
@@ -66,7 +71,7 @@ describe("inicio del pago", () => {
         }),
       );
     vi.stubGlobal("fetch", fetchMock);
-    await createMedusaCheckout(config).startPayment("cart_1");
+    await createMedusaCheckout(config).startPayment("cart_1", "pp_wompi_wompi");
     expect(fetchMock).toHaveBeenCalledTimes(2);
   });
   it("no redirige a URLs que no sean del checkout de Wompi", async () => {
@@ -93,9 +98,59 @@ describe("inicio del pago", () => {
           ),
       );
       await expect(
-        createMedusaCheckout(config).startPayment("cart_1"),
+        createMedusaCheckout(config).startPayment("cart_1", "pp_wompi_wompi"),
       ).rejects.toThrow("pago");
     }
+  });
+  it("abre Mercado Pago y acepta solo su dominio de checkout", async () => {
+    const mp = "https://www.mercadopago.com.co/checkout/v1/redirect?pref_id=1";
+    const flow = (url: string) =>
+      vi
+        .fn()
+        .mockResolvedValueOnce(
+          Response.json({
+            cart: { id: "cart_1", payment_collection: { id: "paycol_1" } },
+          }),
+        )
+        .mockResolvedValueOnce(
+          Response.json({
+            payment_collection: {
+              payment_sessions: [
+                session({
+                  provider_id: "pp_mercadopago_mercadopago",
+                  data: { checkout_url: url },
+                }),
+              ],
+            },
+          }),
+        );
+    const fetchMock = flow(mp);
+    vi.stubGlobal("fetch", fetchMock);
+    expect(
+      await createMedusaCheckout(config).startPayment(
+        "cart_1",
+        "pp_mercadopago_mercadopago",
+      ),
+    ).toEqual({ redirectUrl: mp });
+    expect(JSON.parse(fetchMock.mock.calls[1][1].body)).toEqual({
+      provider_id: "pp_mercadopago_mercadopago",
+    });
+    // la URL de Wompi no vale para una sesión de Mercado Pago
+    vi.stubGlobal("fetch", flow("https://checkout.wompi.co/p/?x=1"));
+    await expect(
+      createMedusaCheckout(config).startPayment(
+        "cart_1",
+        "pp_mercadopago_mercadopago",
+      ),
+    ).rejects.toThrow("pago");
+  });
+  it("rechaza medios de pago no integrados sin contactar a Medusa", async () => {
+    const fetchMock = vi.fn();
+    vi.stubGlobal("fetch", fetchMock);
+    await expect(
+      createMedusaCheckout(config).startPayment("cart_1", "pp_system_default"),
+    ).rejects.toThrow("Medio de pago");
+    expect(fetchMock).not.toHaveBeenCalled();
   });
   it("explica cuando la tienda no tiene pagos habilitados", async () => {
     vi.stubGlobal(
@@ -110,7 +165,7 @@ describe("inicio del pago", () => {
         .mockResolvedValueOnce(Response.json({}, { status: 503 })),
     );
     await expect(
-      createMedusaCheckout(config).startPayment("cart_1"),
+      createMedusaCheckout(config).startPayment("cart_1", "pp_wompi_wompi"),
     ).rejects.toThrow("pagos aún no están habilitados");
   });
 });
@@ -146,6 +201,17 @@ describe("estado del pago", () => {
       "failed",
     ],
     [{}, "pending"],
+    [
+      {
+        payment_collection: {
+          payment_sessions: [
+            session({ status: "error" }),
+            session({ provider_id: "pp_mercadopago_mercadopago" }),
+          ],
+        },
+      },
+      "pending",
+    ],
   ])("cart %j → %s", async (data, expected) => {
     const fetchMock = cart(data);
     vi.stubGlobal("fetch", fetchMock);
@@ -165,12 +231,15 @@ describe("rutas de pago", () => {
     vi.stubEnv("MEDUSA_PUBLISHABLE_KEY", "pk_test");
     vi.stubEnv("MEDUSA_REGION_ID", "reg_colombia");
   }
-  const post = (body: unknown, headers: Record<string, string> = {}) =>
+  const post = (
+    body: Record<string, unknown>,
+    headers: Record<string, string> = {},
+  ) =>
     startPayment(
       new Request("http://localhost:3200/api/checkout/payment", {
         method: "POST",
         headers,
-        body: JSON.stringify(body),
+        body: JSON.stringify({ providerId: "pp_wompi_wompi", ...body }),
       }),
     );
   it("valida origen e id de carrito antes de contactar a Medusa", async () => {
@@ -183,6 +252,8 @@ describe("rutas de pago", () => {
     ).toBe(403);
     for (const cartId of ["", "../admin", "cart_1?x=1", 5])
       expect((await post({ cartId })).status).toBe(400);
+    for (const providerId of ["", "pp_wompi_wompi/../x", 7])
+      expect((await post({ cartId: "cart_1", providerId })).status).toBe(400);
     expect(fetchMock).not.toHaveBeenCalled();
   });
   it("devuelve la URL de pago", async () => {

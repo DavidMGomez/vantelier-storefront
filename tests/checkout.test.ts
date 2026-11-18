@@ -49,7 +49,16 @@ function medusaFlow(
         ],
       }),
     )
-    .mockResolvedValueOnce(Response.json({ cart: cartTotals }));
+    .mockResolvedValueOnce(Response.json({ cart: cartTotals }))
+    .mockResolvedValueOnce(
+      Response.json({
+        payment_providers: [
+          { id: "pp_system_default" },
+          { id: "pp_mercadopago_mercadopago" },
+          { id: "pp_wompi_wompi" },
+        ],
+      }),
+    );
 }
 afterEach(() => {
   vi.unstubAllGlobals();
@@ -98,7 +107,15 @@ describe("checkout Medusa", () => {
       taxTotal: 47580,
       total: 298000,
       shippingLabel: "Envío incluido",
+      // solo medios integrados, en orden fijo; nunca el proveedor de sistema
+      paymentMethods: [
+        { id: "pp_wompi_wompi", label: "Wompi" },
+        { id: "pp_mercadopago_mercadopago", label: "Mercado Pago" },
+      ],
     });
+    expect(fetchMock.mock.calls[3][0]).toBe(
+      "http://127.0.0.1:9000/store/payment-providers?region_id=reg_colombia",
+    );
     const [createUrl, createInit] = fetchMock.mock.calls[0];
     expect(createUrl).toBe("http://127.0.0.1:9000/store/carts");
     expect(createInit.headers["x-publishable-api-key"]).toBe("pk_test");

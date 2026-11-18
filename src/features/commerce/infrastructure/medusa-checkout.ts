@@ -1,5 +1,9 @@
 import type { CheckoutGateway } from "../application/ports/checkout-gateway";
-import type { CheckoutSummary, PaymentStatus } from "../domain/checkout";
+import type {
+  CheckoutSummary,
+  PaymentMethod,
+  PaymentStatus,
+} from "../domain/checkout";
 import { medusaBaseUrl, type MedusaConfig } from "./medusa-config";
 
 type MedusaCart = {
@@ -21,9 +25,16 @@ type MedusaPaymentCollection = {
   payment_sessions?: MedusaPaymentSession[];
 };
 
-// Por ahora un solo medio de pago; Mercado Pago y ePayco llegan en sus propias ramas.
-const PAYMENT_PROVIDER = "pp_wompi_wompi";
-const CHECKOUT_HOSTS = ["checkout.wompi.co"];
+// Medios integrados, en el orden en que se ofrecen. Cada uno solo redirige a su checkout oficial.
+const PAYMENT_METHODS: (PaymentMethod & { hosts: string[] })[] = [
+  { id: "pp_wompi_wompi", label: "Wompi", hosts: ["checkout.wompi.co"] },
+  {
+    id: "pp_mercadopago_mercadopago",
+    label: "Mercado Pago",
+    hosts: ["www.mercadopago.com.co", "sandbox.mercadopago.com.co"],
+  },
+];
+const knownMethod = (id: string) => PAYMENT_METHODS.find((m) => m.id === id);
 
 /** Error con un mensaje apto para el comprador. */
 export class CheckoutError extends Error {}
@@ -49,6 +60,20 @@ export function createMedusaCheckout(config: MedusaConfig): CheckoutGateway {
       );
     }
     return response;
+  }
+  async function paymentMethods(): Promise<PaymentMethod[]> {
+    const response = await call(
+      `/store/payment-providers?${new URLSearchParams({ region_id: config.regionId })}`,
+    );
+    if (!response.ok) return [];
+    const enabled = new Set(
+      ((await response.json()).payment_providers ?? []).map(
+        (p: { id?: unknown }) => p?.id,
+      ),
+    );
+    return PAYMENT_METHODS.filter((m) => enabled.has(m.id)).map(
+      ({ id, label }) => ({ id, label }),
+    );
   }
   return {
     async prepare(lines, address) {
@@ -110,10 +135,14 @@ export function createMedusaCheckout(config: MedusaConfig): CheckoutGateway {
         throw new CheckoutError(
           "No pudimos asignar el envío. Intenta de nuevo.",
         );
-      return summary((await shipped.json()).cart, option.name);
+      // Totales validados antes de consultar los medios de pago.
+      const totals = summary((await shipped.json()).cart, option.name, []);
+      return { ...totals, paymentMethods: await paymentMethods() };
     },
 
-    async startPayment(cartId) {
+    async startPayment(cartId, paymentMethodId) {
+      const method = knownMethod(paymentMethodId);
+      if (!method) throw new CheckoutError("Medio de pago no disponible.");
       const cartPath = `/store/carts/${encodeURIComponent(cartId)}`;
       const current = await call(
         `${cartPath}?${new URLSearchParams({ fields: "id,payment_collection.id" })}`,
@@ -142,7 +171,7 @@ export function createMedusaCheckout(config: MedusaConfig): CheckoutGateway {
       }
       const opened = await call(
         `/store/payment-collections/${encodeURIComponent(collectionId)}/payment-sessions`,
-        { method: "POST", body: { provider_id: PAYMENT_PROVIDER } },
+        { method: "POST", body: { provider_id: method.id } },
       );
       if (opened.status === 503)
         throw new CheckoutError(
@@ -156,9 +185,11 @@ export function createMedusaCheckout(config: MedusaConfig): CheckoutGateway {
         | MedusaPaymentCollection
         | undefined;
       const session = collection?.payment_sessions?.find(
-        (s) => s.provider_id === PAYMENT_PROVIDER,
+        (s) => s.provider_id === method.id,
       );
-      return { redirectUrl: checkoutUrl(session?.data?.checkout_url) };
+      return {
+        redirectUrl: checkoutUrl(session?.data?.checkout_url, method.hosts),
+      };
     },
 
     async paymentStatus(cartId) {
@@ -178,18 +209,14 @@ export function createMedusaCheckout(config: MedusaConfig): CheckoutGateway {
 }
 
 /** Solo se redirige al checkout oficial del proveedor, por HTTPS. */
-function checkoutUrl(value: unknown): string {
+function checkoutUrl(value: unknown, hosts: string[]): string {
   let url: URL | null = null;
   try {
     url = typeof value === "string" ? new URL(value) : null;
   } catch {
     url = null;
   }
-  if (
-    !url ||
-    url.protocol !== "https:" ||
-    !CHECKOUT_HOSTS.includes(url.hostname)
-  )
+  if (!url || url.protocol !== "https:" || !hosts.includes(url.hostname))
     throw new CheckoutError("No pudimos iniciar el pago. Intenta de nuevo.");
   return url.toString();
 }
@@ -201,17 +228,19 @@ function status(
 ): PaymentStatus {
   // El pedido existe solo cuando el webhook verificado completó el carrito.
   if (cart?.completed_at) return "paid";
-  const session = cart?.payment_collection?.payment_sessions?.find(
-    (s) => s.provider_id === PAYMENT_PROVIDER,
+  const sessions = (cart?.payment_collection?.payment_sessions ?? []).filter(
+    (s) => s.provider_id && knownMethod(s.provider_id),
   );
-  return session?.status === "error" || session?.status === "canceled"
-    ? "failed"
-    : "pending";
+  const closed = (s: MedusaPaymentSession) =>
+    s.status === "error" || s.status === "canceled";
+  // Fallido solo si todos los intentos quedaron cerrados; cualquier otro sigue en curso.
+  return sessions.length && sessions.every(closed) ? "failed" : "pending";
 }
 
 function summary(
   cart: MedusaCart | undefined,
-  label?: string,
+  label: string | undefined,
+  methods: PaymentMethod[],
 ): CheckoutSummary {
   const amounts = [
     cart?.item_total,
@@ -236,5 +265,6 @@ function summary(
     taxTotal,
     total,
     shippingLabel: label || "Envío",
+    paymentMethods: methods,
   };
 }
