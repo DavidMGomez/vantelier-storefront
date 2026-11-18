@@ -20,7 +20,11 @@ import { ProductVisual } from "./product-visual";
 import type { CartLine, Product } from "../../domain/catalog";
 import { availabilityLabel, formatMoney } from "../../domain/catalog";
 import { Modal } from "@/shared/ui/modal";
-import { CheckoutForm, type PrepareCheckout } from "./checkout-form";
+import {
+  CheckoutForm,
+  type PayCheckout,
+  type PrepareCheckout,
+} from "./checkout-form";
 export function Storefront({
   simulated = false,
   initialPage,
@@ -29,6 +33,7 @@ export function Storefront({
   checkout,
   checkoutEnabled,
   prepareCheckout,
+  payCheckout,
 }: {
   simulated?: boolean;
   initialPage: CatalogPage;
@@ -38,6 +43,8 @@ export function Storefront({
   checkoutEnabled: boolean;
   /** Paso de datos de envío y total calculado por el backend (Medusa). */
   prepareCheckout?: PrepareCheckout;
+  /** Abre la pasarela de pago para el carrito ya preparado. */
+  payCheckout?: PayCheckout;
 }) {
   const [filters, setFilters] = useState(emptyFilters);
   const [pageFilters, setPageFilters] = useState(emptyFilters);
@@ -456,6 +463,7 @@ export function Storefront({
             <CheckoutForm
               lines={cart}
               prepare={prepareCheckout}
+              pay={payCheckout}
               onBack={() => setCheckoutStep(false)}
             />
           ) : items.length ? (

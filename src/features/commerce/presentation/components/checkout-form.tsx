@@ -13,6 +13,7 @@ export type PrepareCheckout = (
   lines: CartLine[],
   address: ShippingAddress,
 ) => Promise<CheckoutSummary>;
+export type PayCheckout = (cartId: string) => Promise<void>;
 
 const fields: {
   name: keyof ShippingAddress;
@@ -67,16 +68,31 @@ const empty = Object.fromEntries(
 export function CheckoutForm({
   lines,
   prepare,
+  pay,
   onBack,
 }: {
   lines: CartLine[];
   prepare: PrepareCheckout;
+  /** Sin medio de pago configurado, se muestra el total sin cobrar. */
+  pay?: PayCheckout;
   onBack: () => void;
 }) {
   const [address, setAddress] = useState(empty);
   const [summary, setSummary] = useState<CheckoutSummary | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
+
+  async function startPayment(cartId: string) {
+    if (!pay) return;
+    setError("");
+    setBusy(true);
+    try {
+      await pay(cartId);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Intenta de nuevo.");
+      setBusy(false);
+    }
+  }
 
   async function submit(event: FormEvent) {
     event.preventDefault();
@@ -126,15 +142,37 @@ export function CheckoutForm({
             : ""}
           . Envío a {address.city.trim()}, {address.province.trim()}.
         </p>
-        <p className="demo-note">
-          Muy pronto podrás pagar con Wompi, Mercado Pago o ePayco. Todavía no
-          se realiza ningún cobro.
-        </p>
-        <button className="button full" disabled>
-          Pagar {formatMoney(summary.total, summary.currency)}
+        {pay ? (
+          <p className="detail-note">
+            Pagarás en Wompi con tarjeta, PSE, Nequi u otros medios. Tu pedido
+            se confirma cuando Wompi nos notifica el pago.
+          </p>
+        ) : (
+          <p className="demo-note">
+            Los pagos aún no están habilitados. Todavía no se realiza ningún
+            cobro.
+          </p>
+        )}
+        <button
+          className="button full"
+          disabled={!pay || busy}
+          onClick={() => startPayment(summary.cartId)}
+        >
+          {busy
+            ? "Abriendo Wompi…"
+            : `Pagar ${formatMoney(summary.total, summary.currency)}`}
           <ArrowRight size={18} aria-hidden="true" />
         </button>
-        <button className="remove" onClick={() => setSummary(null)}>
+        {error && (
+          <p role="alert" className="error">
+            {error}
+          </p>
+        )}
+        <button
+          className="remove"
+          disabled={busy}
+          onClick={() => setSummary(null)}
+        >
           Editar datos de envío
         </button>
       </div>

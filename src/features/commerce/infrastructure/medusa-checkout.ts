@@ -1,5 +1,5 @@
 import type { CheckoutGateway } from "../application/ports/checkout-gateway";
-import type { CheckoutSummary } from "../domain/checkout";
+import type { CheckoutSummary, PaymentStatus } from "../domain/checkout";
 import { medusaBaseUrl, type MedusaConfig } from "./medusa-config";
 
 type MedusaCart = {
@@ -11,6 +11,19 @@ type MedusaCart = {
   total?: unknown;
 };
 type MedusaShippingOption = { id?: string; name?: string; amount?: unknown };
+type MedusaPaymentSession = {
+  provider_id?: string;
+  status?: string;
+  data?: { checkout_url?: unknown };
+};
+type MedusaPaymentCollection = {
+  id?: string;
+  payment_sessions?: MedusaPaymentSession[];
+};
+
+// Por ahora un solo medio de pago; Mercado Pago y ePayco llegan en sus propias ramas.
+const PAYMENT_PROVIDER = "pp_wompi_wompi";
+const CHECKOUT_HOSTS = ["checkout.wompi.co"];
 
 /** Error con un mensaje apto para el comprador. */
 export class CheckoutError extends Error {}
@@ -99,7 +112,101 @@ export function createMedusaCheckout(config: MedusaConfig): CheckoutGateway {
         );
       return summary((await shipped.json()).cart, option.name);
     },
+
+    async startPayment(cartId) {
+      const cartPath = `/store/carts/${encodeURIComponent(cartId)}`;
+      const current = await call(
+        `${cartPath}?${new URLSearchParams({ fields: "id,payment_collection.id" })}`,
+      );
+      if (!current.ok)
+        throw new CheckoutError("No encontramos tu compra. Empieza de nuevo.");
+      let collectionId = (
+        (await current.json()).cart?.payment_collection as
+          | MedusaPaymentCollection
+          | undefined
+      )?.id;
+      if (!collectionId) {
+        const created = await call("/store/payment-collections", {
+          method: "POST",
+          body: { cart_id: cartId },
+        });
+        collectionId = created.ok
+          ? ((await created.json()).payment_collection?.id as
+              | string
+              | undefined)
+          : undefined;
+        if (!collectionId)
+          throw new CheckoutError(
+            "No pudimos iniciar el pago. Intenta de nuevo.",
+          );
+      }
+      const opened = await call(
+        `/store/payment-collections/${encodeURIComponent(collectionId)}/payment-sessions`,
+        { method: "POST", body: { provider_id: PAYMENT_PROVIDER } },
+      );
+      if (opened.status === 503)
+        throw new CheckoutError(
+          "La tienda está en preparación. Los pagos aún no están habilitados.",
+        );
+      if (!opened.ok)
+        throw new CheckoutError(
+          "No pudimos iniciar el pago. Intenta de nuevo.",
+        );
+      const collection = (await opened.json()).payment_collection as
+        | MedusaPaymentCollection
+        | undefined;
+      const session = collection?.payment_sessions?.find(
+        (s) => s.provider_id === PAYMENT_PROVIDER,
+      );
+      return { redirectUrl: checkoutUrl(session?.data?.checkout_url) };
+    },
+
+    async paymentStatus(cartId) {
+      const response = await call(
+        `/store/carts/${encodeURIComponent(cartId)}?${new URLSearchParams({
+          fields:
+            "id,completed_at,payment_collection.payment_sessions.status,payment_collection.payment_sessions.provider_id",
+        })}`,
+      );
+      if (!response.ok)
+        throw new CheckoutError(
+          "No pudimos consultar tu pago. Intenta de nuevo.",
+        );
+      return status((await response.json()).cart);
+    },
   };
+}
+
+/** Solo se redirige al checkout oficial del proveedor, por HTTPS. */
+function checkoutUrl(value: unknown): string {
+  let url: URL | null = null;
+  try {
+    url = typeof value === "string" ? new URL(value) : null;
+  } catch {
+    url = null;
+  }
+  if (
+    !url ||
+    url.protocol !== "https:" ||
+    !CHECKOUT_HOSTS.includes(url.hostname)
+  )
+    throw new CheckoutError("No pudimos iniciar el pago. Intenta de nuevo.");
+  return url.toString();
+}
+
+function status(
+  cart:
+    | { completed_at?: unknown; payment_collection?: MedusaPaymentCollection }
+    | undefined,
+): PaymentStatus {
+  // El pedido existe solo cuando el webhook verificado completó el carrito.
+  if (cart?.completed_at) return "paid";
+  const session = cart?.payment_collection?.payment_sessions?.find(
+    (s) => s.provider_id === PAYMENT_PROVIDER,
+  );
+  return session?.status === "error" || session?.status === "canceled"
+    ? "failed"
+    : "pending";
 }
 
 function summary(

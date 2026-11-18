@@ -21,6 +21,16 @@ export type CheckoutSummary = {
   shippingLabel: string;
 };
 
+/** Estado del pago según el backend; "paid" solo cuando el pedido ya existe. */
+export type PaymentStatus = "paid" | "pending" | "failed";
+
+const CART_ID = /^cart_[A-Za-z0-9]{1,64}$/;
+export function validateCartId(value: unknown): string {
+  if (typeof value !== "string" || !CART_ID.test(value))
+    throw new Error("Revisa la compra que intentas pagar.");
+  return value;
+}
+
 type Rule = { label: string; min: number; max: number; pattern?: RegExp };
 const rules: Record<keyof ShippingAddress, Rule> = {
   email: {
